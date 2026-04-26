@@ -7,6 +7,7 @@ int main()
   scanf("%f", &n);
 st:
   printf("enter customer type :\n 1-domestic\n 2-commercial\n");
+  printf("enter your choice :");
   scanf("%d", &user);
   if (n < 0)
   {
