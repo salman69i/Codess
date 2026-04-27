@@ -7,6 +7,7 @@ int main()
 st:
     printf("\nAre you gay?\n 1-yes of courseee....\n 2-naaaaaaa......\n 3-surprise option \n");
     printf("\nEnter your choice: ");
+    
     scanf("%d", &gay);
 
     switch (gay)
