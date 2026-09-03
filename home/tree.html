@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name ="viewport" content = "width =device-width, initial-scale=1.0">
+        <title>Realistic Romantic Heart Tree </title>
+        <style>
+            body
+            {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background-color:  #13031f  ;
+            }
+            canvas{
+                display: black;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="magicTree"></canvas>
+        <script>
+            const canvas= document.getElementById('magicTree');
+            const ctx = canvas.getContext('2d');
+
+            function resize(){
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize',resize);
+            resize();
+            let state = 'DROPING';
+            let ball ={
+                x: canvas.width / 2,
+                y: -20,
+                vy :0,
+                gravity:0.6,
+                radious: 4,
+                bounces: 0
+            };
+
+            const maxDepth =9;
+            let globalgrothTime =0;
+            let windtime =0;
+            let fallinfLeaves = [];
+            let coupleAlpha =0;
+
+            function drawHeart(scale){
+                ctx.beginPath()
+                for(let t=0; t<= Math.PI*2; t+=0.05){
+                    let hx=16*Math.pow(Math.sin(t),3);
+                    let hy =13*Math.cost(t)-5*Math.cos(2*t)-2 * Math.cos(3*t)-Math.cos(t);
+                    let drawX =hx*scale;
+                    let drawY = -hy*scale;
+                    if(t===0)ctx.moveTo(drawX,drawY);
+                    else cts.lineTo(drawX,drawY);
+                }
+                ctx.fillstyle = '#ff3b7c';
+                ctx.fill();
+            }
+            function drawBramch(baseLen,angle,depth,growhTime,wTime){
+                let startTime = maxDepth-depth;
+                let localGrowth =Math.max(0, Math.min(1,growthtime-startttime));
+                if(localGrowth ===0) return;
+
+                let currentlen = baselen *localGrowth;
+                ctx.save();
+                let sway = 0;
+                if(state === 'GROWING' || state === 'SWAYING'){
+                    sway = Math.sin(wTime +depth )*1.5*(maxDepth -depth +1)*localGrowth;
+
+                    ctx.rotate((angle + sway)*Math.PI/180);
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#0a0301';
+                    ctx.linewidth = depth * 1.2;
+                    ctx.lineCap = 'round';
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -currentLen);
+                    ctx.stroke();
+
+                    ctx.translate(0, currentLen);
+
+                    if(depth <= 3){
+                        let leafGroth = Math.max(0, Math.min(1, growthTime - startTime -0.5));
+                        if(leafGroth>0){
+                            drawHeart(0.45*leafGroth);
+                            if (state ==='SWAYING' && Math.random()< 0.003){
+                                let matrix = ctx.getTransform();
+                                fallingLeaves.push({
+                                    x: matrix.e,
+                                    y:matrix.f,
+                                    vx: (Math.random()-0.5)*1.5,
+                                    vy: Math.random()*0.8 +0.4,
+                                    scale : (0.3 +Math.random()*.15)*leafGroth,
+                                    angle: math.random()*Math.PI*2,
+                                    spin: (Math.random()-0.5)*0.05,
+                                    flutter:math.random()*100
+                                })
+                            }
+                        }
+
+                        if(depth>1){
+                            drawBramch(baseLen * 0.74,24,depth -1,growthTime,wTime);
+                            drawBramch(baseLen*0.74,-24,depth -1,growthTime,wTime);
+                        }
+
+                        ctx.restore();
+                    }
+                    function drawSky(){
+                    let gradient = ctx.createLinearGradient(0,0,0,canvas.height);
+                    gradient.addColorStop(0,"#13031f");
+                    gradient.addColorStop(0.4,"#4c1236");
+                    gradient.addColorStop(0.8,"#94294a");
+                    gradient.addColorStop(1,"#d96570");
+                    ctx.fillstyle = gradient;
+                    ctx.fillstyle(0,0,canvas.width,canvas.height);
+                    }
+                }
+                function drawSun(floorY){
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(canvas.width/2,floorY,140,Math.PI,0);
+                    ctx.fillStyle = "3ff6a00";
+                    ctx.shadowBlur = 80;
+                    ctx.shadowColor = "#ff2a00";
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+            function drawGrass(floorY){
+                ctx.beginPath();
+                ctx.moveTo(0,canvas.height);
+                ctx.lineto(0,floorY);
+                for(Let x = 0; x<=canvas.width;x+=10){
+                    Let h= 8 +Math.sin(x*0.05+windtime)*4
+                }
+            }
+        </script>
+        </body>
+</html>

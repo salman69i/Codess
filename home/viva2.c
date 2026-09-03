@@ -1,11 +1,16 @@
-#include<stdio.h>
+#include <stdio.h>
 int main()
 {
-    int i=2,j=2;
-    while(i+1?--i:j++)
+    int i;
+    scanf("%d", &i);
+    if (i == 10)
     {
-        printf("%d ",i);
+        printf("Hello World\n");
+        printf("akib is a gay");
+    }
+    else
+    {
+        printf("wrong answer");
     }
     return 0;
-
 }

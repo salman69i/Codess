@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bonsai Tree Silhouette</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #05010a;
+            font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, 'Times New Roman', serif;
+        }
+
+        #stage {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background: #05010a;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .bar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 6.2%;
+            background: #000;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .bar.top {
+            top: 0;
+        }
+
+        .bar.bottom {
+            bottom: 0;
+        }
+
+        #title {
+            position: absolute;
+            top: 13%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 86%;
+            text-align: center;
+            color: #fdf3ec;
+            z-index: 4;
+            opacity: 0;
+            transition: opacity 1.6s ease;
+            text-shadow: 0 2px 22px rgba(0, 0, 0, 0.65), 0 0 40px rgba(255, 140, 90, 0.15);
+            pointer-events: none;
+        }
+
+        #title.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #title h1 {
+            font-size: clamp(17px, 4.1vw, 32px);
+            font-weight: 400;
+            margin: 0;
+            letter-spacing: 0.5px;
+            line-height: 1.3;
+            outline: none;
+        }
+
+        #title p {
+            font-size: clamp(11px, 2vw, 15px);
+            margin: 8px 0 0;
+            opacity: 0.72;
+            font-style: italic;
+            letter-spacing: 1.5px;
+            outline: none;
+        }
+
+        #hint {
+            position: absolute;
+            bottom: 8.5%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            letter-spacing: 1px;
+            z-index: 4;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            pointer-events: none;
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+        }
+
+        #hint.show {
+            opacity: 1;
+        }
+
+        #replay {
+            position: absolute;
+            bottom: 9.5%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
+            padding: 9px 24px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            background: rgba(10, 4, 8, 0.35);
+            backdrop-filter: blur(4px);
+            color: #fdf3ec;
+            font-family: inherit;
+            font-size: 13px;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 1s ease, background 0.3s ease, transform 0.2s ease;
+        }
+
+        #replay.show {
+            opacity: 0.85;
+        }
+
+        #replay:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(-50%) scale(1.04);
+        }
+
+        #replay:active {
+            transform: translateX(-50%) scale(0.97);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="stage">
+        <canvas id="c"></canvas>
+        <div class="bar top"></div>
+        <div class="bar bottom"></div>
+        <div id="title">
+            <h1 contenteditable="true" spellcheck="false">POV: It's Your Birthday Nishat Last Happy Birthdayy To You This Year...HAAPPPYYY BIRRTHHHDAYYY....🐣🐐🐒  </h1>
+            <p contenteditable="true" spellcheck="false">— YOU COMPLETE ME NISHAT...🌻 —</p>
+        </div>
+        <div id="hint">tap the title to edit it</div>
+        <button id="replay">↻ grow again</button>
+    </div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            const canvas = document.getElementById('c');
+            const ctx = canvas.getContext('2d');
+            const stage = document.getElementById('stage');
+            const titleEl = document.getElementById('title');
+            const hintEl = document.getElementById('hint');
+            const replayBtn = document.getElementById('replay');
+
+            function mulberry32(seed) {
+                return function () {
+                    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+                    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+                    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+                };
+            }
+            let seedBase = 2026;
+            let rand = mulberry32(seedBase);
+
+            function clamp01(x) { return x < 0 ? 0 : (x > 1 ? 1 : x); }
+            function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+            function easeOutSine(t) { return Math.sin((t * Math.PI) / 2); }
+            function lerp(a, b, t) { return a + (b - a) * t; }
+
+            // Timings & Setup
+            const MAX_DEPTH = 7;
+            const PER_DEPTH_DELAY = 0.75;
+            const GROW_DURATION = 1.4;
+            const TOTAL_GROW = MAX_DEPTH * PER_DEPTH_DELAY + GROW_DURATION;
+            const GROWTH_SPEED = 1.0;
+
+            const PETAL_COLORS = ['#f7a1c4', '#f37ba3', '#e05286', '#c8326a', '#ffaed1'];
+
+            function pickPetalColor(r) {
+                return PETAL_COLORS[Math.floor(r * PETAL_COLORS.length)];
+            }
+
+            let W = 0, H = 0, DPR = 1;
+            let groundY = 0, startX = 0, startY = 0, trunkLen = 0, trunkWidth = 0;
+            let root = null;
+            let capturedTips = [];
+            let tipsCaptured = false;
+
+            let clock = 0;
+            let windTime = 0;
+            let elapsed = 0;
+            let bloomClock = -1;
+            let coupleAlpha = 0;
+            let spawnTimer = 0;
+            let fallingPetals = [];
+            let stars = [];
+            let fireflies = [];
+            let lastTs = 0;
+            let running = true;
+
+            const FALL_CAP = 180;
+
+            function drawLeafCluster(x, y, scale, alpha) {
+                if (alpha <= 0.001 || scale <= 0.01) return;
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.globalAlpha = alpha;
+
+                for (let i = 0; i < 7; i++) {
+                    const angle = (i / 7) * Math.PI * 2;
+                    const dist = scale * (0.8 + 0.4 * Math.sin(i * 1.5));
+                    const px = Math.cos(angle) * dist;
+                    const py = Math.sin(angle) * dist;
+
+                    ctx.beginPath();
+                    ctx.fillStyle = PETAL_COLORS[i % PETAL_COLORS.length];
+                    ctx.ellipse(px, py, scale * 0.7, scale * 0.4, angle, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            function buildNode(len, depth, parentWidth) {
+                const width = depth === 0 ? trunkWidth : Math.max(1.2, parentWidth * 0.72);
+                const curveOffset = (rand() - 0.5) * len * 0.35;
+                const swaySeed = rand() * 1000;
+
+                let jitter = null;
+                if (depth >= 2) {
+                    jitter = [];
+                    const numLeaves = depth === MAX_DEPTH ? 10 : 5;
+                    for (let i = 0; i < numLeaves; i++) {
+                        jitter.push({
+                            dx: (rand() - 0.5) * 26,
+                            dy: (rand() - 0.5) * 20,
+                            scale: 3.5 + rand() * 4.0,
+                            delay: rand() * 1.8
+                        });
+                    }
+                }
+
+                const node = {
+                    len, depth, width, curveOffset, swaySeed,
+                    children: null,
+                    isLeaf: depth === MAX_DEPTH,
+                    jitter
+                };
+
+                if (depth < MAX_DEPTH) {
+                    node.children = [];
+                    const spread = depth === 0 ? 0.65 : 0.45 + rand() * 0.25;
+                    const count = depth < 3 ? 3 : 2;
+
+                    for (let i = 0; i < count; i++) {
+                        const angle = (i - (count - 1) / 2) * spread + (rand() - 0.5) * 0.15;
+                        let safeAngle = angle;
+                        if (depth === 0 && safeAngle < -1.1) safeAngle = -1.1;
+                        if (depth === 0 && safeAngle > 1.1) safeAngle = 1.1;
+
+                        const ratio = 0.72 + rand() * 0.1;
+                        const child = buildNode(len * ratio, depth + 1, width);
+                        child.angleOffset = safeAngle;
+                        node.children.push(child);
+                    }
+                }
+
+                return node;
+            }
+
+            function buildTree() {
+                trunkLen = H * 0.13;
+                trunkWidth = Math.max(10, W * 0.016);
+                startX = W * 0.38;
+                startY = groundY;
+                root = buildNode(trunkLen, 0, trunkWidth);
+                root.angleOffset = -0.05;
+                tipsCaptured = false;
+                capturedTips = [];
+            }
+
+            function buildAtmosphere() {
+                stars = [];
+                const starCount = Math.floor(W * H / 10000);
+                for (let i = 0; i < starCount; i++) {
+                    stars.push({
+                        x: rand() * W,
+                        y: rand() * H * 0.5,
+                        r: rand() * 1.2 + 0.3,
+                        phase: rand() * Math.PI * 2,
+                        speed: 0.6 + rand() * 1.2
+                    });
+                }
+                fireflies = [];
+                for (let i = 0; i < 20; i++) {
+                    fireflies.push({
+                        x: startX + (rand() - 0.5) * W * 0.5,
+                        y: groundY - rand() * H * 0.3,
+                        r: 1.2 + rand() * 1.5,
+                        phase: rand() * Math.PI * 2,
+                        speed: 0.4 + rand() * 0.5,
+                        driftSeed: rand() * 1000
+                    });
+                }
+            }
+
+            let resizeTimer = null;
+            function resize() {
+                DPR = Math.min(window.devicePixelRatio || 1, 2);
+                W = stage.clientWidth;
+                H = stage.clientHeight;
+                canvas.width = Math.round(W * DPR);
+                canvas.height = Math.round(H * DPR);
+                canvas.style.width = W + 'px';
+                canvas.style.height = H + 'px';
+                groundY = H * 0.78;
+                buildTree();
+                buildAtmosphere();
+                fallingPetals = [];
+            }
+            window.addEventListener('resize', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(resize, 150);
+            });
+
+            function drawSky() {
+                const breathe = Math.sin(elapsed * 0.045) * 0.5 + 0.5;
+                const topColor = lerpColor('#160318', '#20051f', breathe);
+                const g = ctx.createLinearGradient(0, 0, 0, groundY + 40);
+                g.addColorStop(0, topColor);
+                g.addColorStop(0.35, '#4a1240');
+                g.addColorStop(0.60, '#8c2049');
+                g.addColorStop(0.82, '#d1483d');
+                g.addColorStop(1, '#ff9a42');
+                ctx.fillStyle = g;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            function lerpColor(hexA, hexB, t) {
+                const a = hexToRgb(hexA), b = hexToRgb(hexB);
+                const r = Math.round(lerp(a[0], b[0], t));
+                const gg = Math.round(lerp(a[1], b[1], t));
+                const bl = Math.round(lerp(a[2], b[2], t));
+                return `rgb(${r},${gg},${bl})`;
+            }
+
+            function hexToRgb(hex) {
+                const v = parseInt(hex.slice(1), 16);
+                return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+            }
+
+            function drawStars() {
+                const starAlpha = clamp01((elapsed - 3.5) / 9);
+                if (starAlpha <= 0.01) return;
+                for (let i = 0; i < stars.length; i++) {
+                    const s = stars[i];
+                    const tw = 0.5 + 0.5 * Math.sin(elapsed * s.speed + s.phase);
+                    ctx.globalAlpha = starAlpha * (0.25 + tw * 0.65);
+                    ctx.fillStyle = '#fff7ea';
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1;
+            }
+
+            function drawSun() {
+                const sunX = W * 0.42, sunY = groundY + H * 0.01;
+                const sunR = H * 0.14;
+                const pulse = 1 + Math.sin(elapsed * 0.5) * 0.015;
+
+                const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunR * 3.0 * pulse);
+                glow.addColorStop(0, 'rgba(255,190,90,0.55)');
+                glow.addColorStop(0.35, 'rgba(255,130,60,0.22)');
+                glow.addColorStop(1, 'rgba(255,90,60,0)');
+                ctx.fillStyle = glow;
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, sunR * 3.0 * pulse, 0, Math.PI * 2);
+                ctx.fill();
+
+                const core = ctx.createRadialGradient(sunX, sunY - sunR * 0.15, 0, sunX, sunY, sunR * pulse);
+                core.addColorStop(0, '#ffe2a8');
+                core.addColorStop(0.55, '#ffb238');
+                core.addColorStop(1, '#ff7a1a');
+                ctx.fillStyle = core;
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, sunR * pulse, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            function drawSolidGround() {
+                ctx.save();
+                ctx.fillStyle = '#080306';
+                ctx.beginPath();
+                ctx.moveTo(0, H);
+                ctx.lineTo(0, groundY - H * 0.015);
+                const steps = 12;
+                for (let i = 0; i <= steps; i++) {
+                    const x = (W / steps) * i;
+                    const y = (groundY - H * 0.015) + Math.sin(i * 0.8 + 1.2) * 8;
+                    ctx.lineTo(x, y);
+                }
+                ctx.lineTo(W, H);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            const branchColor = '#1a0b12';
+
+            function drawNode(node, doCollect) {
+                const startTime = node.depth * PER_DEPTH_DELAY;
+                const localRaw = (clock - startTime) / GROW_DURATION;
+                const localGrowth = clamp01(localRaw);
+                if (localGrowth <= 0) return;
+                const eased = easeOutCubic(localGrowth);
+
+                let sway = 0;
+                if (node.depth >= 2) {
+                    const swayAmt = Math.min(node.depth - 1, 5) * 0.008;
+                    sway = Math.sin(windTime * 0.85 + node.swaySeed) * swayAmt * eased;
+                }
+
+                ctx.save();
+                ctx.rotate((node.angleOffset || 0) + sway);
+
+                const curLen = node.len * eased;
+                const curve = node.curveOffset * eased;
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(curve * 0.5, -curLen * 0.5, curve, -curLen);
+                ctx.lineWidth = Math.max(1.0, node.width);
+                ctx.strokeStyle = branchColor;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                if (node.width > 3.0) {
+                    ctx.strokeStyle = 'rgba(255,175,110,0.12)';
+                    ctx.lineWidth = Math.max(0.6, node.width * 0.25);
+                    ctx.beginPath();
+                    ctx.moveTo(0.8, 0);
+                    ctx.quadraticCurveTo(curve * 0.5 + 0.8, -curLen * 0.5, curve + 0.8, -curLen);
+                    ctx.stroke();
+                }
+
+                if (eased >= 0.999) {
+                    ctx.translate(curve, -curLen);
+
+                    if (bloomClock >= 0 && node.jitter) {
+                        drawBloomOnNode(node);
+                    }
+
+                    if (node.children) {
+                        for (let i = 0; i < node.children.length; i++) drawNode(node.children[i], doCollect);
+                    } else if (doCollect) {
+                        const m = ctx.getTransform();
+                        capturedTips.push({ x: m.e, y: m.f });
+                    }
+                }
+                ctx.restore();
+            }
+
+            function drawBloomOnNode(node) {
+                const baseDelay = (node.swaySeed % 100) / 100;
+                for (let i = 0; i < node.jitter.length; i++) {
+                    const j = node.jitter[i];
+                    const rawP = clamp01((bloomClock - baseDelay - j.delay) / 1.5);
+                    if (rawP <= 0) continue;
+
+                    // Eased smooth blooming without abrupt size pops
+                    const smoothP = easeOutSine(rawP);
+                    drawLeafCluster(j.dx * smoothP, j.dy * smoothP, j.scale * smoothP, smoothP);
+                }
+            }
+
+            function drawCanopyGlow() {
+                if (bloomClock < 0) return;
+                const alpha = clamp01(bloomClock / 2) * 0.3;
+                if (alpha <= 0.01) return;
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                const cx = startX, cy = startY - trunkLen * 1.6;
+                const r = H * 0.4;
+                const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+                g.addColorStop(0, `rgba(243,123,163,${alpha})`);
+                g.addColorStop(1, 'rgba(243,123,163,0)');
+                ctx.fillStyle = g;
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            function spawnFallingPetal() {
+                if (capturedTips.length === 0) return;
+                const tip = capturedTips[(Math.random() * capturedTips.length) | 0];
+                fallingPetals.push({
+                    x: tip.x + (Math.random() - 0.5) * 30,
+                    y: tip.y + (Math.random() - 0.5) * 20,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: 12 + Math.random() * 12,
+                    rot: Math.random() * Math.PI * 2,
+                    spin: (Math.random() - 0.5) * 1.2,
+                    scale: 2.5 + Math.random() * 3.0,
+                    color: pickPetalColor(Math.random()),
+                    flutterSeed: Math.random() * 10,
+                    life: 0
+                });
+            }
+
+            function updateFalling(dt) {
+                for (let i = fallingPetals.length - 1; i >= 0; i--) {
+                    const f = fallingPetals[i];
+                    f.life += dt;
+                    f.y += f.vy * dt;
+                    // Fluid physics drift for falling petals
+                    f.x += (f.vx + Math.sin(windTime * 1.5 + f.flutterSeed) * 16) * dt;
+                    f.rot += f.spin * dt;
+
+                    if (f.y > groundY + 20) {
+                        fallingPetals.splice(i, 1);
+                    }
+                }
+            }
+
+            function drawFalling() {
+                for (let i = 0; i < fallingPetals.length; i++) {
+                    const f = fallingPetals[i];
+
+                    // Smooth fade-in on spawn & fade-out near ground
+                    let fadeIn = clamp01(f.life / 0.4);
+                    let fadeOut = clamp01((groundY + 20 - f.y) / 35);
+                    let alpha = fadeIn * fadeOut;
+
+                    ctx.save();
+                    ctx.translate(f.x, f.y);
+                    ctx.rotate(f.rot);
+                    ctx.globalAlpha = alpha;
+                    ctx.fillStyle = f.color;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, f.scale * 1.2, f.scale * 0.6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function drawCouple(alpha) {
+                if (alpha <= 0.01) return;
+
+                const cx = startX + Math.max(140, W * 0.22);
+                const cy = groundY - 2;
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = '#080306';
+
+                ctx.beginPath();
+                ctx.ellipse(cx - 12, cy - 28, 14, 28, 0.05, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx - 10, -58 + cy, 9, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.ellipse(cx + 10, cy - 25, 13, 25, -0.06, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx + 7, -53 + cy, 8.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillRect(cx - 26, cy - 8, 50, 10);
+
+                const rimGlow = ctx.createRadialGradient(cx, cy - 30, 2, cx, cy - 30, 45);
+                rimGlow.addColorStop(0, 'rgba(255, 180, 120, 0.25)');
+                rimGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = rimGlow;
+                ctx.fillRect(cx - 45, cy - 75, 90, 80);
+
+                ctx.restore();
+            }
+
+            function drawFireflies() {
+                if (bloomClock < 0.5) return;
+                const alpha = clamp01((bloomClock - 0.5) / 1.5);
+                for (let i = 0; i < fireflies.length; i++) {
+                    const f = fireflies[i];
+                    const pulse = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(elapsed * f.speed + f.phase));
+                    const x = f.x + Math.sin(elapsed * 0.3 + f.driftSeed) * 20;
+                    const y = f.y + Math.cos(elapsed * 0.22 + f.driftSeed) * 15;
+
+                    ctx.globalAlpha = pulse * alpha;
+                    ctx.fillStyle = '#ffe0aa';
+                    ctx.beginPath();
+                    ctx.arc(x, y, f.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+            }
+
+            function drawVignette() {
+                const vg = ctx.createRadialGradient(W / 2, H * 0.46, H * 0.22, W / 2, H * 0.46, H * 0.8);
+                vg.addColorStop(0, 'rgba(0,0,0,0)');
+                vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+                ctx.fillStyle = vg;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            function animate(ts) {
+                if (!lastTs) lastTs = ts;
+                const dt = Math.min((ts - lastTs) / 1000, 0.05);
+                lastTs = ts;
+                elapsed += dt;
+                windTime += dt;
+                clock += dt * GROWTH_SPEED;
+
+                if (clock >= TOTAL_GROW) {
+                    if (bloomClock < 0) bloomClock = 0; else bloomClock += dt;
+                }
+                if (bloomClock > 0.8 && coupleAlpha < 1) {
+                    coupleAlpha = Math.min(1, coupleAlpha + dt / 1.4);
+                }
+
+                const doCollect = !tipsCaptured && clock >= TOTAL_GROW;
+
+                if (bloomClock > 1.2) {
+                    spawnTimer += dt;
+                    const interval = 0.08;
+                    while (spawnTimer > interval && fallingPetals.length < FALL_CAP) {
+                        spawnTimer -= interval;
+                        spawnFallingPetal();
+                    }
+                }
+                updateFalling(dt);
+
+                ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+                ctx.clearRect(0, 0, W, H);
+
+                drawSky();
+                drawStars();
+                drawSun();
+
+                const camScale = 1 + 0.015 * Math.sin(elapsed * 0.15);
+                const camX = Math.sin(elapsed * 0.09) * 5;
+                const camY = Math.cos(elapsed * 0.07) * 3;
+
+                ctx.save();
+                ctx.translate(W / 2 + camX, H / 2 + camY);
+                ctx.scale(camScale, camScale);
+                ctx.translate(-W / 2, -H / 2);
+
+                drawSolidGround();
+                drawCanopyGlow();
+
+                ctx.save();
+                ctx.translate(startX, startY);
+                drawNode(root, doCollect);
+                ctx.restore();
+
+                drawCouple(coupleAlpha);
+                drawFalling();
+                drawFireflies();
+
+                ctx.restore();
+
+                if (doCollect) tipsCaptured = true;
+
+                drawVignette();
+
+                if (running) requestAnimationFrame(animate);
+            }
+
+            let uiTimers = [];
+            function clearUiTimers() { uiTimers.forEach(clearTimeout); uiTimers = []; }
+            function scheduleUi() {
+                clearUiTimers();
+                titleEl.classList.remove('show');
+                hintEl.classList.remove('show');
+                replayBtn.classList.remove('show');
+                uiTimers.push(setTimeout(() => titleEl.classList.add('show'), 350));
+                uiTimers.push(setTimeout(() => hintEl.classList.add('show'), 900));
+                uiTimers.push(setTimeout(() => hintEl.classList.remove('show'), 4200));
+                uiTimers.push(setTimeout(() => titleEl.classList.remove('show'), 5200));
+                uiTimers.push(setTimeout(() => replayBtn.classList.add('show'), (TOTAL_GROW + 3.0) * 1000));
+            }
+
+            function resetScene(newSeed) {
+                seedBase = newSeed;
+                rand = mulberry32(seedBase);
+                clock = 0; windTime = 0; bloomClock = -1; coupleAlpha = 0;
+                spawnTimer = 0; fallingPetals = []; lastTs = 0;
+                buildTree();
+                buildAtmosphere();
+                scheduleUi();
+            }
+
+            replayBtn.addEventListener('click', function () {
+                resetScene((Math.random() * 100000) | 0);
+            });
+
+            titleEl.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+            });
+
+            resize();
+            resetScene(seedBase);
+            requestAnimationFrame(animate);
+
+        })();
+    </script>
+</body>
+
+</html>

@@ -2,9 +2,7 @@
 
 int main() {
     int dept;
-    float sscGPA, hscGPA;
-    float income;
-    float admissionScore;
+    float sscGPA, hscGPA,income,admissionScore;
     int eligible = 1;
 
     // Input

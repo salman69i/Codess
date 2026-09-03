@@ -1,0 +1,618 @@
+#include <WiFi.h>
+    #include <HTTPClient.h>
+        #include <SPI.h>
+            #include <MFRC522.h>
+                #include <Wire.h>
+                    #include <LiquidCrystal_I2C.h>
+                        #include <ESP32Servo.h>
+
+                            // =====================================================
+                            // Wi-Fi Configuration
+                            // =====================================================
+
+                            const char *ssid = "MESL";
+                            const char *password = "tuikimember";
+
+                            String GOOGLE_SCRIPT_URL =
+                            "https://script.google.com/macros/s/AKfycbzALx7heER9ziqa01Sue8RKfUsJifXrtUC0ZuXs51fEKnX9Vlcf-mUxXeRkR489-1iN/exec";
+
+                            // =====================================================
+                            // Pin Configuration
+                            // =====================================================
+
+                            #define SS_PIN 5
+                            #define RST_PIN 4
+                            #define BUZZER 2
+
+                            #define JOY_Y_PIN 34
+                            #define JOY_SW_PIN 32
+
+                            // =====================================================
+                            // LCD / RFID
+                            // =====================================================
+
+                            LiquidCrystal_I2C lcd(0x27, 20, 4);
+                            MFRC522 rfid(SS_PIN, RST_PIN);
+
+                            // =====================================================
+                            // Servo Configuration
+                            // =====================================================
+
+                            const int servoPins[6] = {
+                            13, 12, 14, 27, 26, 25};
+
+                            Servo servos[6];
+
+                            // =====================================================
+                            // Product Structure
+                            // =====================================================
+
+                            struct Product
+                            {
+                            String name;
+                            String section;
+                            int price;
+                            int stock;
+                            };
+
+                            Product products[6] = {
+                            {"Chips", "Snacks", 20, 2},
+                            {"Wafers", "Snacks", 15, 2},
+                            {"Juice", "Beverages", 30, 0},
+                            {"Coffee", "Beverages", 35, 2},
+                            {"Chocolate", "Sweets", 25, 2},
+                            {"Biscuit", "Snacks", 10, 2}};
+
+                            // =====================================================
+                            // Registered Users
+                            // =====================================================
+
+                            struct User
+                            {
+                            String uid;
+                            String name;
+                            };
+
+                            User registeredUsers[] = {
+
+                            {"605BCE5C", "Prince"},
+                            {"F290128A", "Anima"}};
+
+                            const int totalUsers =
+                            sizeof(registeredUsers) / sizeof(registeredUsers[0]);
+
+                            // =====================================================
+                            // Function Prototypes
+                            // =====================================================
+
+                            void connectToWiFi();
+                            bool ensureWiFiConnection();
+
+                            String getCardUID();
+                            int getUserIndex(String uid);
+
+                            void dispenseProduct(int index);
+
+                            bool sendDataToGoogleSheet(
+                            String name,
+                            String uid,
+                            String section,
+                            String item,
+                            int price);
+
+                            void beep(int ms);
+
+                            int selectItemWithJoystick();
+
+                            void waitForCardRemoval();
+
+                            // =====================================================
+                            // SETUP
+                            // =====================================================
+
+                            void setup()
+                            {
+
+                            Serial.begin(115200);
+
+                            // Buzzer
+                            pinMode(BUZZER, OUTPUT);
+                            digitalWrite(BUZZER, LOW);
+
+                            // Joystick button
+                            pinMode(JOY_SW_PIN, INPUT_PULLUP);
+
+                            // Servo initialization
+                            for (int i = 0; i < 6; i++) { pinMode(servoPins[i], OUTPUT); digitalWrite(servoPins[i],
+                                LOW); servos[i].attach(servoPins[i], 500, 2500); servos[i].writeMicroseconds(1500);
+                                delay(100); servos[i].detach(); } // I2C Wire.begin(); // LCD lcd.begin();
+                                lcd.backlight(); // SPI SPI.begin(); // RFID rfid.PCD_Init(); // Startup message
+                                lcd.clear(); lcd.setCursor(0, 0); lcd.print(" VENDING MACHINE"); lcd.setCursor(0, 1);
+                                lcd.print(" SYSTEM"); lcd.setCursor(0, 2); lcd.print("Initializing..."); delay(1500); //
+                                Connect Wi-Fi connectToWiFi(); delay(1000); }
+                                //=====================================================// MAIN LOOP
+                                //=====================================================void loop() { //
+                                --------------------------------------------------- // Make sure Wi-Fi is available //
+                                --------------------------------------------------- if (WiFi.status() !=WL_CONNECTED) {
+                                lcd.clear(); lcd.setCursor(0, 0); lcd.print("WiFi Disconnected"); lcd.setCursor(0, 1);
+                                lcd.print("Reconnecting..."); ensureWiFiConnection(); delay(500); } //
+                                --------------------------------------------------- // RFID Scan Screen //
+                                --------------------------------------------------- lcd.setCursor(0, 0); lcd.print("
+                                VENDING MACHINE"); lcd.setCursor(0, 1); lcd.print("--------------------");
+                                lcd.setCursor(0, 2); lcd.print("Please Scan Your ID"); lcd.setCursor(0, 3); if
+                                (WiFi.status()==WL_CONNECTED) { lcd.print("WiFi: Connected"); } else { lcd.print("WiFi:
+                                Offline"); } // --------------------------------------------------- // Wait for RFID
+                                Card // --------------------------------------------------- if
+                                (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) { delay(100); return; }
+                                // --------------------------------------------------- // Card Detected //
+                                --------------------------------------------------- beep(80); String
+                                cardUID=getCardUID(); Serial.print("Card UID: ");
+    Serial.println(cardUID);
+
+    // ---------------------------------------------------
+    // Find User
+    // ---------------------------------------------------
+
+    int userIndex = getUserIndex(cardUID);
+
+    // ===================================================
+    // AUTHORIZED USER
+    // ===================================================
+
+    if (userIndex != -1)
+    {
+
+        String userName =
+            registeredUsers[userIndex].name;
+
+        // -----------------------------------------------
+        // Access Granted
+        // -----------------------------------------------
+
+        lcd.clear();
+
+        lcd.setCursor(0, 0);
+        lcd.print(" ACCESS GRANTED"); lcd.setCursor(0, 1); lcd.print("--------------------"); lcd.setCursor(0, 2);
+                                lcd.print("Welcome, ");
+
+        lcd.print(userName);
+
+        lcd.setCursor(0, 3);
+        lcd.print(" Select Your Product"); delay(1500); // ----------------------------------------------- // Product
+                                Selection // ----------------------------------------------- int
+                                selectedIndex=selectItemWithJoystick();
+                                //=================================================// PRODUCT SELECTED
+                                //=================================================if (selectedIndex !=-1) { //
+                                ----------------------------------------------- // Check Stock //
+                                ----------------------------------------------- if (products[selectedIndex].stock> 0)
+                                {
+
+                                // ---------------------------------------------
+                                // Dispensing Screen
+                                // ---------------------------------------------
+
+                                lcd.clear();
+
+                                lcd.setCursor(0, 0);
+                                lcd.print(" DISPENSING");
+
+                                lcd.setCursor(0, 1);
+                                lcd.print("--------------------");
+
+                                lcd.setCursor(0, 2);
+                                lcd.print("Product: ");
+
+                                lcd.print(products[selectedIndex].name);
+
+                                lcd.setCursor(0, 3);
+                                lcd.print("Please Wait...");
+
+                                // ---------------------------------------------
+                                // Dispense Product
+                                // ---------------------------------------------
+
+                                dispenseProduct(selectedIndex);
+
+                                // ---------------------------------------------
+                                // Decrease Local Stock
+                                // ---------------------------------------------
+
+                                products[selectedIndex].stock--;
+
+                                // ---------------------------------------------
+                                // Send Data to Google Sheet
+                                // ---------------------------------------------
+
+                                lcd.clear();
+
+                                lcd.setCursor(0, 0);
+                                lcd.print(" UPDATING DATA");
+
+                                lcd.setCursor(0, 1);
+                                lcd.print("--------------------");
+
+                                lcd.setCursor(0, 2);
+                                lcd.print("Google Sheet...");
+
+                                bool sheetSuccess =
+                                sendDataToGoogleSheet(
+                                userName,
+                                cardUID,
+                                products[selectedIndex].section,
+                                products[selectedIndex].name,
+                                products[selectedIndex].price);
+
+                                // ---------------------------------------------
+                                // Google Sheet Result
+                                // ---------------------------------------------
+
+                                if (sheetSuccess)
+                                {
+
+                                lcd.clear();
+
+                                lcd.setCursor(0, 0);
+                                lcd.print(" TRANSACTION OK");
+
+                                lcd.setCursor(0, 1);
+                                lcd.print("--------------------");
+
+                                lcd.setCursor(0, 2);
+                                lcd.print("Product: ");
+
+                                lcd.print(products[selectedIndex].name);
+
+                                lcd.setCursor(0, 3);
+                                lcd.print("Thank You!");
+
+                                delay(2500);
+                                }
+                                else
+                                {
+
+                                lcd.clear();
+
+                                lcd.setCursor(0, 0);
+                                lcd.print(" SHEET UPDATE FAIL");
+
+                                lcd.setCursor(0, 1);
+                                lcd.print("--------------------");
+
+                                lcd.setCursor(0, 2);
+                                lcd.print("Product Dispensed");
+
+                                lcd.setCursor(0, 3);
+                                lcd.print("Check WiFi / Server");
+
+                                beep(500);
+
+                                delay(3000);
+                                }
+                                }
+
+                                // =================================================
+                                // OUT OF STOCK
+                                // =================================================
+
+                                else
+                                {
+
+                                lcd.clear();
+
+                                lcd.setCursor(0, 0);
+                                lcd.print(" OUT OF STOCK!");
+
+                                lcd.setCursor(0, 1);
+                                lcd.print("--------------------");
+
+                                lcd.setCursor(0, 2);
+                                lcd.print(products[selectedIndex].name);
+
+                                lcd.print(" unavailable");
+
+                                lcd.setCursor(0, 3);
+                                lcd.print("Choose Another");
+
+                                beep(300);
+
+                                delay(2500);
+                                }
+                                }
+
+                                // =================================================
+                                // SELECTION TIMEOUT
+                                // =================================================
+
+                                else
+                                {
+
+                                lcd.clear();
+
+                                lcd.setCursor(0, 0);
+                                lcd.print(" TIME OUT");
+
+                                lcd.setCursor(0, 1);
+                                lcd.print("--------------------");
+
+                                lcd.setCursor(0, 2);
+                                lcd.print("No Product Selected");
+
+                                lcd.setCursor(0, 3);
+                                lcd.print("Please Try Again");
+
+                                delay(2000);
+                                }
+                                }
+
+                                // ===================================================
+                                // UNAUTHORIZED USER
+                                // ===================================================
+
+                                else
+                                {
+
+                                lcd.clear();
+
+                                lcd.setCursor(0, 0);
+                                lcd.print(" ACCESS DENIED");
+
+                                lcd.setCursor(0, 1);
+                                lcd.print("--------------------");
+
+                                lcd.setCursor(0, 2);
+                                lcd.print("Invalid RFID Card");
+
+                                lcd.setCursor(0, 3);
+                                lcd.print("Please Contact Admin");
+
+                                beep(400);
+
+                                delay(2500);
+                                }
+
+                                // ---------------------------------------------------
+                                // Stop RFID communication
+                                // ---------------------------------------------------
+
+                                rfid.PICC_HaltA();
+                                rfid.PCD_StopCrypto1();
+
+                                // ===================================================
+                                // IMPORTANT:
+                                // Wait until the user removes the RFID card.
+                                // This prevents repeated transactions from the
+                                // same card being continuously held near the reader.
+                                // ===================================================
+
+                                waitForCardRemoval();
+                                }
+
+                                // =====================================================
+                                // JOYSTICK PRODUCT SELECTION
+                                // =====================================================
+
+                                int selectItemWithJoystick()
+                                {
+
+                                int currentItem = 0;
+
+                                unsigned long startTime = millis();
+
+                                bool buttonPressed = false;
+
+                                // First menu display
+                                lcd.clear();
+
+                                while (millis() - startTime < 15000) { //
+                                    ------------------------------------------------- // Display Product //
+                                    ------------------------------------------------- lcd.setCursor(0, 0); lcd.print("
+                                    SELECT ITEM"); lcd.setCursor(0, 1); lcd.print("--------------------");
+                                    lcd.setCursor(0, 2); lcd.print(">");
+
+                                    lcd.print(currentItem + 1);
+
+                                    lcd.print(". ");
+
+                                    lcd.print(products[currentItem].name);
+
+                                    // Clear remaining characters
+                                    lcd.print(" ");
+
+                                    lcd.setCursor(0, 3);
+
+                                    lcd.print("Price:");
+
+                                    lcd.print(products[currentItem].price);
+
+                                    lcd.print(" BDT");
+
+                                    lcd.print(" Stock:");
+
+                                    lcd.print(products[currentItem].stock);
+
+                                    // -------------------------------------------------
+                                    // Read Joystick
+                                    // -------------------------------------------------
+
+                                    int yVal = analogRead(JOY_Y_PIN);
+
+                                    // -------------------------------------------------
+                                    // Joystick UP
+                                    // -------------------------------------------------
+
+                                    if (yVal < 1000) { currentItem--; if (currentItem < 0) { currentItem=5; } beep(40);
+                                        startTime=millis(); delay(300); } //
+                                        ------------------------------------------------- // Joystick DOWN //
+                                        ------------------------------------------------- else if (yVal> 3000)
+                                        {
+
+                                        currentItem++;
+
+                                        if (currentItem > 5)
+                                        {
+                                        currentItem = 0;
+                                        }
+
+                                        beep(40);
+
+                                        startTime = millis();
+
+                                        delay(300);
+                                        }
+
+                                        // -------------------------------------------------
+                                        // Joystick SELECT Button
+                                        // -------------------------------------------------
+
+                                        if (digitalRead(JOY_SW_PIN) == LOW)
+                                        {
+
+                                        beep(80);
+
+                                        buttonPressed = true;
+
+                                        delay(200);
+
+                                        break;
+                                        }
+
+                                        delay(100);
+                                        }
+
+                                        if (buttonPressed)
+                                        {
+                                        return currentItem;
+                                        }
+
+                                        return -1;
+                                        }
+
+                                        // =====================================================
+                                        // WIFI CONNECTION
+                                        // =====================================================
+
+                                        void connectToWiFi()
+                                        {
+
+                                        lcd.clear();
+
+                                        lcd.setCursor(0, 0);
+                                        lcd.print(" WIFI CONNECTION");
+
+                                        lcd.setCursor(0, 1);
+                                        lcd.print("--------------------");
+
+                                        lcd.setCursor(0, 2);
+                                        lcd.print("Connecting...");
+
+                                        WiFi.mode(WIFI_STA);
+
+                                        WiFi.begin(ssid, password);
+
+                                        int attempts = 0;
+
+                                        while (WiFi.status() != WL_CONNECTED &&
+                                        attempts < 20) { delay(500); Serial.print("."); lcd.setCursor(0, 3);
+                                            lcd.print("Attempt: ");
+        lcd.print(attempts + 1);
+        lcd.print(" /20"); attempts++; } // --------------------------------------------------- // Connection
+                                            Successful // --------------------------------------------------- if
+                                            (WiFi.status()==WL_CONNECTED) { Serial.println(); Serial.println("WiFi
+                                            Connected!"); Serial.print("IP Address: ");
+        Serial.println(WiFi.localIP());
+
+        lcd.clear();
+
+        lcd.setCursor(0, 0);
+        lcd.print(" WIFI CONNECTED"); lcd.setCursor(0, 1); lcd.print("--------------------"); lcd.setCursor(0, 2);
+                                            lcd.print("IP:"); lcd.print(WiFi.localIP()); lcd.setCursor(0, 3);
+                                            lcd.print("Connection OK"); delay(2000); } //
+                                            --------------------------------------------------- // Connection Failed //
+                                            --------------------------------------------------- else { Serial.println();
+                                            Serial.println("WiFi Connection Failed!"); lcd.clear(); lcd.setCursor(0, 0);
+                                            lcd.print(" WIFI FAILED"); lcd.setCursor(0, 1);
+                                            lcd.print("--------------------"); lcd.setCursor(0, 2); lcd.print("Machine
+                                            Offline"); lcd.setCursor(0, 3); lcd.print("Will Retry Later"); delay(2500);
+                                            } } //=====================================================// ENSURE WIFI
+                                            CONNECTION //=====================================================bool
+                                            ensureWiFiConnection() { if (WiFi.status()==WL_CONNECTED) { return true; }
+                                            Serial.println("Trying to reconnect WiFi..."); WiFi.disconnect();
+                                            delay(500); WiFi.begin(ssid, password); int attempts=0; while (WiFi.status()
+                                            !=WL_CONNECTED && attempts < 20) { delay(500); attempts++;
+                                            Serial.print("."); } Serial.println(); if (WiFi.status()==WL_CONNECTED) {
+                                            Serial.println("WiFi Reconnected!"); lcd.clear(); lcd.setCursor(0, 0);
+                                            lcd.print(" WIFI RECONNECTED"); lcd.setCursor(0, 1);
+                                            lcd.print("--------------------"); lcd.setCursor(0, 2); lcd.print("Internet
+                                            Available"); delay(1500); return true; } Serial.println("WiFi Reconnect
+                                            Failed!"); return false; }
+                                            //=====================================================// GET RFID UID
+                                            //=====================================================String getCardUID() {
+                                            String uidStr="" ; for (byte i=0; i < rfid.uid.size; i++) { if
+                                            (rfid.uid.uidByte[i] < 0x10) { uidStr +="0" ; } uidStr
+                                            +=String(rfid.uid.uidByte[i], HEX); } uidStr.toUpperCase(); return uidStr; }
+                                            //=====================================================// FIND USER BY RFID
+                                            UID //=====================================================int
+                                            getUserIndex(String uid) { for (int i=0; i < totalUsers; i++) { if
+                                            (registeredUsers[i].uid==uid) { return i; } } return -1; }
+                                            //=====================================================// DISPENSE PRODUCT
+                                            //=====================================================void
+                                            dispenseProduct(int index) { // 1. Attach servo with explicit min/max pulse
+                                            limits (500 to 2500 us) servos[index].attach(servoPins[index], 500, 2500);
+                                            delay(50); // 2. Continuous rotation - FULL SPEED (2000us)
+                                            servos[index].writeMicroseconds(2000); delay(2000); // ১ পাক ঘোরার সময়
+                                            (প্রয়োজন অনুযায়ী টিউন করুন) // 3. Send exact stop signal (1500us=Neutral
+                                            Stop) servos[index].writeMicroseconds(1500); delay(300); // সার্ভোকে
+                                            সম্পূর্ণ থামার সময় দেওয়া হলো // 4. Detach signal line
+                                            servos[index].detach(); }
+                                            //=====================================================// SEND DATA TO
+                                            GOOGLE SHEET //=====================================================bool
+                                            sendDataToGoogleSheet( String name, String uid, String section, String item,
+                                            int price) { // --------------------------------------------------- // Check
+                                            WiFi // --------------------------------------------------- if
+                                            (!ensureWiFiConnection()) { Serial.println("No WiFi. Cannot update Sheet.");
+                                            return false; } HTTPClient http; //
+                                            --------------------------------------------------- // Create URL //
+                                            --------------------------------------------------- String
+                                            url=GOOGLE_SCRIPT_URL + "?name=" + name + "&uid=" + uid + "&section=" +
+                                            section + "&item=" + item + "&price=" + String(price); Serial.println();
+                                            Serial.println("Sending data to Google Sheet..."); Serial.println(url); //
+                                            --------------------------------------------------- // Start HTTP connection
+                                            // --------------------------------------------------- http.begin(url); //
+                                            Follow Google Apps Script redirects http.setFollowRedirects(
+                                            HTTPC_STRICT_FOLLOW_REDIRECTS); //
+                                            --------------------------------------------------- // Send GET request //
+                                            --------------------------------------------------- int httpCode=http.GET();
+                                            Serial.print("HTTP Response Code: ");
+    Serial.println(httpCode);
+
+    // ---------------------------------------------------
+    // Check Response
+    // ---------------------------------------------------
+
+    if (httpCode > 0)
+    {
+
+        String response = http.getString();
+
+        Serial.println(" Server Response:"); Serial.println(response); // Google Apps Script normally returns HTTP 200
+                                            if (httpCode==HTTP_CODE_OK) { http.end(); return true; } } //
+                                            --------------------------------------------------- // Request Failed //
+                                            --------------------------------------------------- Serial.println("Google
+                                            Sheet update failed!"); http.end(); return false; }
+                                            //=====================================================// WAIT FOR RFID CARD
+                                            REMOVAL //=====================================================void
+                                            waitForCardRemoval() { lcd.clear(); lcd.setCursor(0, 0); lcd.print(" REMOVE
+                                            YOUR CARD"); lcd.setCursor(0, 1); lcd.print("--------------------");
+                                            lcd.setCursor(0, 2); lcd.print("Please remove RFID"); lcd.setCursor(0, 3);
+                                            lcd.print("card from reader"); Serial.println("Waiting for card
+                                            removal..."); // --------------------------------------------------- //
+                                            Check whether card is still present. // // PICC_WakeupA() can detect the
+                                            card even after // PICC_HaltA() was called. //
+                                            --------------------------------------------------- while (true) { byte
+                                            bufferATQA[2]; byte bufferSize=sizeof(bufferATQA); MFRC522::StatusCode
+                                            status=rfid.PICC_WakeupA( bufferATQA, &bufferSize); // Card is still present
+                                            if (status==MFRC522::STATUS_OK) { delay(300); } // Card has been removed
+                                            else { break; } } Serial.println("Card removed."); delay(500); }
+                                            //=====================================================// BUZZER
+                                            //=====================================================void beep(int ms) {
+                                            digitalWrite(BUZZER, HIGH); delay(ms); digitalWrite(BUZZER, LOW); }

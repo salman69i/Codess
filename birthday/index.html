@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Happy Birthday!</title>
+
+  <!-- Canvas Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&family=Caveat:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-color: #fdf0f5;
+      --card-bg: #ffffff;
+      --primary-color: #ff6b81;
+      --accent-color: #ff4757;
+      --text-color: #2f3542;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Floating Background Shapes */
+    .bg-balloon {
+      position: absolute;
+      bottom: -100px;
+      font-size: 2rem;
+      animation: floatUp 8s infinite linear;
+      opacity: 0.6;
+      z-index: 0;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+      100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Presentation Container */
+    .presentation-container {
+      position: relative;
+      width: 92%;
+      max-width: 700px;
+      height: 560px;
+      background: var(--card-bg);
+      border-radius: 24px;
+      box-shadow: 0 15px 35px rgba(255, 107, 129, 0.15);
+      overflow: hidden;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Slides */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 84%;
+      padding: 34px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      opacity: 0;
+      transform: translateX(100px);
+      transition: all 0.5s ease-in-out;
+      pointer-events: none;
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    /* Typography & Elements */
+    h1, h2 {
+      font-family: 'Fredoka One', cursive;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+    }
+
+    h1 { font-size: 2.5rem; }
+    h2 { font-size: 1.9rem; }
+
+    p {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #57606f;
+      max-width: 520px;
+    }
+
+    /* ---------- Slide 2: Photo Cards ---------- */
+    .photo-grid {
+      display: flex;
+      gap: 15px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .polaroid {
+      background: #fff;
+      padding: 10px 10px 20px 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      border: 1px solid #eee;
+      transform: rotate(-3deg);
+      transition: transform 0.3s ease;
+    }
+
+    .polaroid:nth-child(2) { transform: rotate(4deg); }
+    .polaroid:nth-child(3) { transform: rotate(-2deg); }
+    .polaroid:hover { transform: scale(1.05) rotate(0deg); z-index: 5; }
+
+    .polaroid img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .polaroid-caption {
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin-top: 8px;
+      color: #747d8c;
+    }
+
+    /* ---------- Slide: Through The Years (image timeline) ---------- */
+    .timeline-scroll {
+      display: flex;
+      gap: 16px;
+      margin-top: 18px;
+      overflow-x: auto;
+      padding: 10px 6px 16px;
+      max-width: 100%;
+      scroll-snap-type: x proximity;
+    }
+
+    .timeline-scroll::-webkit-scrollbar { height: 6px; }
+    .timeline-scroll::-webkit-scrollbar-thumb { background: #ffc2cd; border-radius: 10px; }
+
+    .timeline-card {
+      flex: 0 0 auto;
+      width: 130px;
+      scroll-snap-align: center;
+      text-align: center;
+    }
+
+    .timeline-card img {
+      width: 130px;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 14px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+      transition: transform 0.3s ease;
+    }
+
+    .timeline-card img:hover { transform: scale(1.06); }
+
+    .timeline-year {
+      display: inline-block;
+      margin-top: 8px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 0.85rem;
+      color: var(--accent-color);
+      background: #fff0f3;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ---------- Slide: Interactive Cake ---------- */
+    .cake-container {
+      margin-top: 18px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .candle {
+      width: 12px;
+      height: 35px;
+      background: linear-gradient(to bottom, #ff9ff3, #feca57);
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .flame {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 16px;
+      background: #ff9f43;
+      border-radius: 50% 50% 20% 20%;
+      box-shadow: 0 0 10px #ff9f43;
+      animation: flicker 0.6s infinite alternate;
+    }
+
+    .flame.blown-out { display: none; }
+
+    @keyframes flicker {
+      0% { transform: translateX(-50%) scale(1); }
+      100% { transform: translateX(-50%) scale(1.15); }
+    }
+
+    .cake-base {
+      width: 140px;
+      height: 70px;
+      background: #ff6b81;
+      border-radius: 12px 12px 0 0;
+      border-bottom: 8px solid #ff4757;
+      position: relative;
+    }
+
+    .cake-base::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 20px;
+      background: #ffffff;
+      border-radius: 12px 12px 10px 10px;
+    }
+
+    /* ---------- Slide: Letter ---------- */
+    .letter-card {
+      margin-top: 16px;
+      background: #fffaf5;
+      border: 1px solid #f3d9d9;
+      border-radius: 14px;
+      padding: 24px 26px;
+      max-width: 480px;
+      box-shadow: 0 8px 24px rgba(255,107,129,0.12);
+      transform: rotate(-1deg);
+    }
+
+    .letter-card p {
+      font-family: 'Caveat', cursive;
+      font-size: 1.5rem;
+      line-height: 1.5;
+      color: #5b4636;
+      max-width: none;
+    }
+
+    .letter-signature {
+      margin-top: 10px;
+      font-family: 'Caveat', cursive;
+      font-size: 1.4rem;
+      color: var(--accent-color);
+      text-align: right;
+    }
+
+    /* ---------- Slide: Balloon Pop Game ---------- */
+    .balloon-game {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+      height: 220px;
+      margin-top: 14px;
+    }
+
+    .pop-balloon {
+      position: absolute;
+      bottom: 0;
+      font-size: 2.6rem;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.15s ease;
+      animation: bobble 2.4s ease-in-out infinite;
+    }
+
+    .pop-balloon:hover { transform: scale(1.1); }
+    .pop-balloon.popped { animation: popOut 0.4s forwards; pointer-events: none; }
+
+    @keyframes bobble {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes popOut {
+      to { transform: scale(1.6); opacity: 0; }
+    }
+
+    #balloon-game-text {
+      margin-top: 10px;
+      font-weight: 800;
+      color: var(--accent-color);
+      min-height: 24px;
+    }
+
+    /* ---------- Slide: Gift Box ---------- */
+    .gift-box {
+      font-size: 4rem;
+      cursor: pointer;
+      animation: bounce 1.5s infinite;
+      margin-top: 15px;
+      user-select: none;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    /* ---------- Navigation Controls ---------- */
+    .controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 16%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 24px;
+      background: rgba(255, 255, 255, 0.85);
+      border-top: 1px solid #f1f2f6;
+    }
+
+    .btn {
+      padding: 9px 20px;
+      border: none;
+      border-radius: 50px;
+      background-color: var(--primary-color);
+      color: white;
+      font-family: 'Fredoka One', cursive;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .btn:hover { background-color: var(--accent-color); transform: translateY(-2px); }
+    .btn:disabled { background-color: #dcdde1; cursor: not-allowed; transform: none; }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 160px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #dcdde1;
+      transition: background 0.3s;
+    }
+
+    .dot.active { background: var(--primary-color); }
+
+    @media (max-width: 480px) {
+      .presentation-container { height: 600px; }
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating Background Balloon Containers -->
+  <div id="balloon-container"></div>
+
+  <!-- Presentation Deck -->
+  <div class="presentation-container">
+
+    <!-- Slide 1: Welcome -->
+    <div class="slide active">
+      <h1>🎉 Happy Birthday! Nisuu 🎉</h1>
+      <p>I built something small and special just for you. Let's take a quick walkthrough!</p>
+      <p style="margin-top: 15px; font-weight: bold; color: #ff6b81;">Click 'Next' to start ➔</p>
+    </div>
+
+    <!-- Slide 2: Memory Lane -->
+    <div class="slide">
+      <h2>📸 Memory Lane</h2>
+      <p>Here's a quick look at some wonderful memories we've shared.</p>
+      <div class="photo-grid">
+        <div class="polaroid">
+          <img src="IMG_20260729_181704.jpg" alt="Memory 1">
+          <div class="polaroid-caption">rekta gas nei naaa</div>
+        </div>
+        <div class="polaroid">
+          <img src="IMG-20260507-WA0026.jpg" alt="Memory 2">
+          <div class="polaroid-caption">smileee</div>
+        </div>
+        <div class="polaroid">
+          <img src="IMG-20251124-WA0103.jpg" alt="Memory 2">
+          <div class="polaroid-caption">cholo sobi tuli amra aktaa</div>
+        </div>
+        <div class="polaroid">
+          <img src="IMG_20260122_143927.jpg" alt="Memory 3">
+          <div class="polaroid-caption">bus a amar bomi aseee</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Through The Years (NEW image section) -->
+    <div class="slide">
+      <h2>🕰️ Some more Memories</h2>
+      <p>Some More Memories Still to Seeeeee....</p>
+      <div class="timeline-scroll">
+        <div class="timeline-card">
+          <img src="Screenshot 2026-08-15 050026.jpg" alt="Then">
+          <div class="timeline-year">chotttooo tummiii my cutieee</div>
+        </div>
+        <div class="timeline-card">
+          <img src="IMG-20260702-WA0004.jpg" alt="Growing">
+          <div class="timeline-year">my another favourite picturee</div>
+        </div>
+        <div class="timeline-card">
+          <img src="IMG-20260303-WA0004.jpg" alt="Adventures">
+          <div class="timeline-year">we are famousss 😎</div>
+        </div>
+        <div class="timeline-card">
+          <img src="IMG_20260114_105509.jpg" alt="Today">
+          <div class="timeline-year">amar posonder ondho chokh🌼</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Make a Wish -->
+    <div class="slide">
+      <h2>🎂 Make a Wish!</h2>
+      <p>Click the candle below to blow it out...fuuu dawww...</p>
+      <div class="cake-container" onclick="blowCandle()">
+        <div class="candle">
+          <div class="flame" id="flame"></div>
+        </div>
+        <div class="cake-base"></div>
+      </div>
+      <p id="candle-text" style="font-size: 0.9rem; margin-top: 15px; font-style: italic;"></p>
+    </div>
+
+    <!-- Slide 5: A Letter For You (NEW) -->
+    <div class="slide">
+      <h2>💌 A Letter For You</h2>
+      <div class="letter-card">
+        <p>
+          Another year, another chapter, and honestly the best one yet is still ahead of you.
+          I hope this year brings you closer to everything you're dreaming of, and I'm grateful
+          to get to watch it happen.You may never be in my life but I am greatful to have you in my life.
+        </p>
+        <div class="letter-signature">— With love 💕</div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Balloon Pop Game (NEW interactive) -->
+    <div class="slide">
+      <h2>🎈 Pop A Balloon!</h2>
+      <p>Each balloon has a little birthday note inside.Click them.</p>
+      <div class="balloon-game" id="balloonGame"></div>
+      <p id="balloon-game-text"></p>
+    </div>
+
+    <!-- Slide 7: A Special Wish (Gift Box) -->
+    <div class="slide">
+      <h2>🎁 A Special Wish</h2>
+      <p>"May your year ahead be filled with joy, exciting challenges, great successes, and endless smiles.May Allah fullfil all your dream and wishes..."</p>
+      <div class="gift-box" onclick="openGift()">🎁</div>
+      <p id="gift-text" style="font-size: 0.95rem; color: #ff4757; font-weight: bold;"></p>
+    </div>
+
+    <!-- Slide 8: Celebrate -->
+    <div class="slide">
+      <h2>🎈 Time to Celebrate! 🎈</h2>
+      <p>Hope you have an amazing day and an incredible year ahead!r hae khawa dawa korte hobe kintu besi besi nahoi kintu kaj hobe naa onekkk khaite hobeee eta tomar goal...Just be healthy,happy and just happy...</p>
+      <button class="btn" style="margin-top: 20px;" onclick="triggerConfetti()">Celebrate Again! 🎊</button>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="controls">
+      <button class="btn" id="prevBtn" onclick="changeSlide(-1)" disabled>Prev</button>
+      <div class="dots" id="dotsContainer"></div>
+      <button class="btn" id="nextBtn" onclick="changeSlide(1)">Next</button>
+    </div>
+
+  </div>
+
+  <script>
+    // Slide Navigation Setup
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const dotsContainer = document.getElementById('dotsContainer');
+
+    // Create Navigation Dots dynamically
+    slides.forEach((_, index) => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (index === 0) dot.classList.add('active');
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = document.querySelectorAll('.dot');
+
+    function updateSlides() {
+      slides.forEach((slide, index) => {
+        slide.classList.remove('active');
+        dots[index].classList.remove('active');
+      });
+
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].classList.add('active');
+
+      // Toggle control button states
+      prevBtn.disabled = currentSlide === 0;
+      if (currentSlide === slides.length - 1) {
+        nextBtn.innerText = "Finish";
+        triggerConfetti();
+      } else {
+        nextBtn.innerText = "Next";
+      }
+    }
+
+    function changeSlide(direction) {
+      currentSlide += direction;
+      if (currentSlide < 0) currentSlide = 0;
+      if (currentSlide >= slides.length) currentSlide = slides.length - 1;
+      updateSlides();
+    }
+
+    // Interactive Candle Blowing Feature
+    let isBlown = false;
+    function blowCandle() {
+      if (!isBlown) {
+        document.getElementById('flame').classList.add('blown-out');
+        document.getElementById('candle-text').innerText = "✨ Your wish has been recorded! ✨";
+        triggerConfetti();
+        isBlown = true;
+      }
+    }
+
+    // Interactive Gift Box Feature
+    function openGift() {
+      const giftText = document.getElementById('gift-text');
+      giftText.innerText = "💖 Wishing you happiness, good health, and success, all the things you want in your life !";
+      triggerConfetti();
+    }
+
+    // Confetti Explosion Function using Canvas Confetti Library
+    function triggerConfetti() {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }
+
+    // ---------- Balloon Pop Mini Game ----------
+    const balloonMessages = [
+      "🎈 You made my life beautiful!",
+      "🎈 You let me feel how it feels to love!",
+      "🎈 Never stop being you.",
+      "🎈 You just mean peace and happiness!",
+      "🎈 You're loved more than you know."
+    ];
+
+    function setupBalloonGame() {
+      const game = document.getElementById('balloonGame');
+      if (!game || game.dataset.built) return; // build once
+      game.dataset.built = "true";
+      const positions = [8, 26, 44, 62, 80];
+      positions.forEach((leftPercent, i) => {
+        const balloon = document.createElement('div');
+        balloon.className = 'pop-balloon';
+        balloon.innerText = '🎈';
+        balloon.style.left = leftPercent + '%';
+        balloon.style.animationDelay = (i * 0.3) + 's';
+        balloon.style.color = ['#ff6b81', '#ff9ff3', '#feca57', '#54a0ff', '#1dd1a1'][i % 5];
+        balloon.addEventListener('click', () => {
+          if (balloon.classList.contains('popped')) return;
+          balloon.classList.add('popped');
+          document.getElementById('balloon-game-text').innerText = balloonMessages[i % balloonMessages.length];
+          confetti({ particleCount: 40, spread: 55, origin: { y: 0.7 } });
+        });
+        game.appendChild(balloon);
+      });
+    }
+
+    // Build the balloon game once its slide is first shown
+    const originalUpdateSlides = updateSlides;
+    updateSlides = function () {
+      originalUpdateSlides();
+      if (slides[currentSlide].querySelector('#balloonGame')) {
+        setupBalloonGame();
+      }
+    };
+
+    // Generate Dynamic Floating Background Balloons
+    const balloonContainer = document.getElementById('balloon-container');
+    const balloonEmojis = ['🎈', '✨', '💖', '⭐', '🎉', '🐐', '🐒', '🐣'];
+
+    for (let i = 0; i < 15; i++) {
+      const balloon = document.createElement('div');
+      balloon.className = 'bg-balloon';
+      balloon.innerText = balloonEmojis[Math.floor(Math.random() * balloonEmojis.length)];
+      balloon.style.left = `${Math.random() * 100}vw`;
+      balloon.style.animationDuration = `${6 + Math.random() * 6}s`;
+      balloon.style.animationDelay = `${Math.random() * 5}s`;
+      balloonContainer.appendChild(balloon);
+    }
+  </script>
+</body>
+</html>

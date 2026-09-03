@@ -1,0 +1,17 @@
+{
+  "python.defaultInterpreterPath": "D:\\Miniforge3\\python.exe",
+  "C_Cpp.errorSquiggles": "enabled",
+  "files.autoSave": "afterDelay",
+  "editor.defaultFormatter": "ms-vscode.cpptools-extension-pack",
+  "editor.formatOnPaste": true,
+  "editor.autoClosingBrackets": "languageDefined",
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  }
+}

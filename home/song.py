@@ -2,7 +2,7 @@ import sys
 import time
 
 def print_lyrics():
-   
+
     lyrics = [
         "Haathon ko sambhale mere haathon mein",
         "Kaise haathon ko sambhale mere haathon mein..",
