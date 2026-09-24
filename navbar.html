@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navbar Redesign</title>
+<style>
+  :root {
+    --ink: #14171C;
+    --ink-soft: #3B4048;
+    --paper: #FBFAF8;
+    --line: #E7E4DD;
+    --accent: #2E5D4B;
+    --accent-soft: #E4EEE9;
+    --gold: #C9A24B;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+  }
+
+  /* ---------- NAVBAR ---------- */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(251, 250, 248, 0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    transition: box-shadow 0.25s ease, background 0.25s ease;
+  }
+
+  header.scrolled {
+    box-shadow: 0 4px 20px rgba(20, 23, 28, 0.06);
+  }
+
+  nav {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .logo-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-mark svg { width: 16px; height: 16px; }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-links li { position: relative; }
+
+  .nav-links a {
+    display: block;
+    padding: 8px 16px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 14.5px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+
+  .nav-links a:hover {
+    color: var(--ink);
+    background: rgba(20, 23, 28, 0.045);
+  }
+
+  .nav-links a.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-login {
+    padding: 9px 16px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+  }
+
+  .btn-login:hover { background: rgba(20, 23, 28, 0.045); }
+
+  .btn-signup {
+    padding: 9px 18px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--paper);
+    background: var(--ink);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: transform 0.15s ease, background 0.2s ease;
+  }
+
+  .btn-signup:hover {
+    background: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  /* mobile toggle */
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+  }
+
+  .menu-toggle span {
+    width: 22px;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+  }
+
+  .menu-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .menu-toggle.open span:nth-child(2) { opacity: 0; }
+  .menu-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  @media (max-width: 760px) {
+    .nav-links {
+      position: fixed;
+      top: 62px;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+      padding: 8px 16px 16px;
+      gap: 2px;
+      transform: translateY(-8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .nav-links.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .nav-links a { padding: 12px 14px; }
+    .actions .btn-login { display: none; }
+    .menu-toggle { display: flex; }
+  }
+
+  /* ---------- demo page content ---------- */
+  .demo {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 90px 28px 120px;
+  }
+
+  .demo h1 {
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+  }
+
+  .demo p {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+
+  .demo .filler {
+    height: 900px;
+  }
+</style>
+</head>
+<body>
+
+<header id="site-header">
+  <nav>
+    <a href="#" class="logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 12C4 7.58 7.58 4 12 4s8 3.58 8 8-3.58 8-8 8" stroke="#FBFAF8" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </span>
+      Company
+    </a>
+
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#" class="active">Home</a></li>
+      <li><a href="#">Company</a></li>
+      <li><a href="#">Analytics</a></li>
+      <li><a href="#">Products</a></li>
+      <li><a href="#">Users</a></li>
+      <li><a href="#">Contact</a></li>
+    </ul>
+
+    <div class="actions">
+      <a href="#" class="btn-login">Log in</a>
+      <a href="#" class="btn-signup">Sign up</a>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<div class="demo">
+  <h1>Scroll down to see the sticky effect</h1>
+  <p>
+    The navbar picks up a blur and a soft shadow once you scroll, so it stays
+    legible over any content beneath it. Resize the window below 760px to see
+    the mobile hamburger menu, and click a link to see the active-state pill.
+  </p>
+  <div class="filler"></div>
+</div>
+
+<script>
+  const header = document.getElementById('site-header');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 8);
+  });
+
+  const toggle = document.getElementById('menu-toggle');
+  const links = document.getElementById('nav-links');
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('open');
+    links.classList.toggle('open');
+  });
+
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      link.classList.add('active');
+      toggle.classList.remove('open');
+      links.classList.remove('open');
+    });
+  });
+</script>
+
+</body>
+</html>
