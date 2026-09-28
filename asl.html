@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth Information Jukebox UI</title>
+    <style>
+        body {
+            background-color: #0b1121;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 290px;
+            background-color: #151e32;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #1e293b;
+            z-index: 10;
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            color: #38bdf8;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .track-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .track-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .track-list::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .track-btn {
+            background-color: rgba(255, 255, 255, 0.02);
+            color: #94a3b8;
+            border: 1px solid #1e293b;
+            padding: 14px 16px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .track-btn:hover {
+            background-color: rgba(56, 189, 248, 0.1);
+            border-color: #38bdf8;
+            color: #e0f2fe;
+        }
+
+        .track-btn.active {
+            background-color: #0284c7;
+            color: #ffffff;
+            border-color: #7dd3fc;
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.6);
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            background: radial-gradient(circle at top right, #111827, #0b1121);
+        }
+
+        .map-container {
+            flex-grow: 1;
+            border-radius: 16px;
+            position: relative;
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.9), 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* The NEW animated image layer */
+        .bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+            transition: background-image 0.5s ease;
+            /* Setup the hardware-accelerated zoom animation */
+            animation: cinematicZoom 12s linear forwards;
+            animation-play-state: paused;
+            /* Default paused */
+            will-change: transform;
+        }
+
+        /* When playing, run the CSS animation */
+        .map-container.playing .bg-layer {
+            animation-play-state: running;
+        }
+
+        @keyframes cinematicZoom {
+            0% {
+                transform: scale(1) translate(0, 0);
+                filter: brightness(0.8);
+            }
+
+            100% {
+                transform: scale(1.15) translate(-2%, 2%);
+                filter: brightness(1.1);
+            }
+        }
+
+        /* Tech grid over the image */
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .data-overlay {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(11, 17, 33, 0.75);
+            padding: 20px 35px;
+            border-radius: 12px;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ef4444;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-variant-numeric: tabular-nums;
+            z-index: 2;
+            transition: color 0.5s ease;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+        }
+
+        .map-container.playing .data-overlay {
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% {
+                box-shadow: 0 0 15px currentColor;
+            }
+
+            100% {
+                box-shadow: 0 0 40px currentColor;
+            }
+        }
+
+        .player-controls {
+            height: 110px;
+            margin-top: 30px;
+            background-color: #151e32;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            border: 1px solid #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .play-btn {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 35px;
+            flex-shrink: 0;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
+        }
+
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+
+        .play-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: #ffffff;
+        }
+
+        .timeline {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .time-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #94a3b8;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .progress-bar {
+            flex-grow: 1;
+            height: 10px;
+            background-color: #0f172a;
+            border-radius: 5px;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .progress-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0284c7, #38bdf8);
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+        }
+
+        .progress-head {
+            position: absolute;
+            right: -10px;
+            top: -6px;
+            width: 22px;
+            height: 22px;
+            background-color: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+
+        .visualizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 40px;
+            margin-left: 30px;
+        }
+
+        .bar {
+            width: 6px;
+            background-color: #38bdf8;
+            border-radius: 3px;
+            height: 5px;
+            transition: height 0.1s ease;
+        }
+
+        .map-container.playing~.player-controls .bar {
+            animation: bounce 0.5s infinite alternate ease-in;
+        }
+
+        .map-container.playing~.player-controls .bar:nth-child(2) {
+            animation-delay: 0.1s;
+            animation-duration: 0.6s;
+        }
+
+        .map-container.playing~.player-controls .bar:nth-child(3) {
+            animation-delay: 0.2s;
+            animation-duration: 0.4s;
+        }
+
+        .map-container.playing~.player-controls .bar:nth-child(4) {
+            animation-delay: 0.3s;
+            animation-duration: 0.7s;
+        }
+
+        .map-container.playing~.player-controls .bar:nth-child(5) {
+            animation-delay: 0.15s;
+            animation-duration: 0.5s;
+        }
+
+        @keyframes bounce {
+            0% {
+                height: 5px;
+                background-color: #0284c7;
+            }
+
+            100% {
+                height: 35px;
+                background-color: #7dd3fc;
+                box-shadow: 0 0 10px #7dd3fc;
+            }
+        }
+
+        .icon-play,
+        .icon-pause {
+            display: none;
+        }
+
+        .icon-play.active,
+        .icon-pause.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                </path>
+            </svg>
+            EARTH JUKEBOX
+        </div>
+
+        <div class="track-list">
+            <button class="track-btn active" data-track="temp">Global Temperature</button>
+            <button class="track-btn" data-track="co2">Atmospheric CO2</button>
+            <button class="track-btn" data-track="sea">Sea Level Rise</button>
+            <button class="track-btn" data-track="ozone">Ozone (O3)</button>
+            <button class="track-btn" data-track="soil">Soil Moisture</button>
+            <button class="track-btn" data-track="co">Carbon Monoxide</button>
+            <button class="track-btn" data-track="n2o">Nitrous Oxide (N2O)</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="map-container" id="mapBg">
+            <!-- This is the layer that holds and animates the image -->
+            <div class="bg-layer" id="bgLayer"></div>
+            <div class="grid-overlay"></div>
+            <div class="data-overlay" id="mainData">+0.0°C</div>
+        </div>
+        <div class="player-controls">
+            <button class="play-btn" id="playBtn">
+                <svg class="icon-play active" viewBox="0 0 24 24">
+                    <path d="M5 3l14 9-14 9V3z" />
+                </svg>
+                <svg class="icon-pause" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+            </button>
+            <div class="timeline">
+                <span class="time-label">1980</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">
+                        <div class="progress-head"></div>
+                    </div>
+                </div>
+                <span class="time-label">2024</span>
+            </div>
+            <div class="visualizer">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Track data including IMAGE URLs (Replace the url('...') strings with your local NASA images if you have them)
+        const tracks = {
+            temp: {
+                start: 0.0, end: 1.2, prefix: '+', suffix: '°C', color: '#ef4444', decimals: 1,
+                bgImage: "url('https://images.unsplash.com/photo-1614531341773-3bff8b7cb3fc?auto=format&fit=crop&w=1200&q=80')"
+            },
+            co2: {
+                start: 338, end: 421, prefix: '', suffix: ' ppm', color: '#f59e0b', decimals: 0,
+                bgImage: "url('https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?auto=format&fit=crop&w=1200&q=80')"
+            },
+            sea: {
+                start: 0, end: 100, prefix: '+', suffix: ' mm', color: '#38bdf8', decimals: 0,
+                bgImage: "url('https://images.unsplash.com/photo-1618241973685-614c8d5dc3a1?auto=format&fit=crop&w=1200&q=80')"
+            },
+            ozone: {
+                start: 300, end: 220, prefix: '', suffix: ' DU', color: '#c084fc', decimals: 0,
+                bgImage: "url('https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?auto=format&fit=crop&w=1200&q=80')"
+            },
+            soil: {
+                start: 35.0, end: 15.0, prefix: '', suffix: '%', color: '#ca8a04', decimals: 1,
+                bgImage: "url('https://images.unsplash.com/photo-1463936575829-25148e1db1b8?auto=format&fit=crop&w=1200&q=80')"
+            },
+            co: {
+                start: 85, end: 140, prefix: '', suffix: ' ppb', color: '#fb7185', decimals: 0,
+                bgImage: "url('https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?auto=format&fit=crop&w=1200&q=80')"
+            },
+            n2o: {
+                start: 300, end: 336, prefix: '', suffix: ' ppb', color: '#818cf8', decimals: 0,
+                bgImage: "url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=1200&q=80')"
+            }
+        };
+
+        let currentTrackKey = 'temp';
+        let isPlaying = false;
+        let animationFrame;
+        let progress = 0;
+        let startTime = null;
+        let pausedTime = 0;
+        const duration = 12000;
+
+        const playBtn = document.getElementById('playBtn');
+        const iconPlay = document.querySelector('.icon-play');
+        const iconPause = document.querySelector('.icon-pause');
+        const progressFill = document.getElementById('progressFill');
+        const mainData = document.getElementById('mainData');
+        const mapBg = document.getElementById('mapBg');
+        const bgLayer = document.getElementById('bgLayer');
+        const trackButtons = document.querySelectorAll('.track-btn');
+
+        // Initialize first background
+        bgLayer.style.backgroundImage = tracks['temp'].bgImage;
+
+        function setTrack(trackKey) {
+            cancelAnimationFrame(animationFrame);
+            isPlaying = false;
+            progress = 0;
+            pausedTime = 0;
+            startTime = null;
+
+            mapBg.classList.remove('playing');
+            iconPlay.classList.add('active');
+            iconPause.classList.remove('active');
+
+            // Force reset the CSS zoom animation
+            bgLayer.style.animation = 'none';
+            bgLayer.offsetHeight; // trigger reflow
+            bgLayer.style.animation = null;
+
+            progressFill.style.width = '0%';
+
+            const track = tracks[trackKey];
+            bgLayer.style.backgroundImage = track.bgImage;
+            mainData.style.color = track.color;
+            mainData.innerText = `${track.prefix}${track.start.toFixed(track.decimals)}${track.suffix}`;
+        }
+
+        trackButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                trackButtons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentTrackKey = e.target.getAttribute('data-track');
+                setTrack(currentTrackKey);
+            });
+        });
+
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp - pausedTime;
+            let elapsed = timestamp - startTime;
+            progress = Math.min(elapsed / duration, 1);
+
+            progressFill.style.width = (progress * 100) + '%';
+
+            const track = tracks[currentTrackKey];
+            let currentValue = track.start + (progress * (track.end - track.start));
+            mainData.innerText = `${track.prefix}${currentValue.toFixed(track.decimals)}${track.suffix}`;
+
+            if (progress < 1) {
+                animationFrame = requestAnimationFrame(animate);
+            } else {
+                isPlaying = false;
+                mapBg.classList.remove('playing');
+                iconPlay.classList.add('active');
+                iconPause.classList.remove('active');
+            }
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                // Pause Logic
+                cancelAnimationFrame(animationFrame);
+                isPlaying = false;
+                pausedTime = performance.now() - startTime;
+                startTime = null;
+
+                mapBg.classList.remove('playing');
+                iconPlay.classList.add('active');
+                iconPause.classList.remove('active');
+            } else {
+                // Play Logic
+                if (progress >= 1) {
+                    progress = 0;
+                    pausedTime = 0;
+
+                    // Reset animation if starting from the end
+                    bgLayer.style.animation = 'none';
+                    bgLayer.offsetHeight;
+                    bgLayer.style.animation = null;
+                }
+
+                isPlaying = true;
+                mapBg.classList.add('playing');
+                iconPlay.classList.remove('active');
+                iconPause.classList.add('active');
+
+                animationFrame = requestAnimationFrame(animate);
+            }
+        });
+    </script>
+</body>
+
+</html>
