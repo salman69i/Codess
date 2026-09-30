@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>NASA Global Environmental Monitor — Space Apps Research Prototype</title>
+  <meta name="description"
+    content="NASA Space Apps research prototype for interactive Earth observation, environmental analytics, time-series exploration and data sonification.">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@600&family=Space+Grotesk:wght@500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <style>
+    :root {
+      color-scheme: dark;
+      --p: rgba(9, 18, 32, .76);
+      --b: rgba(90, 200, 255, .22);
+      --c: #3fd0ff;
+      --t: #dbeaf6;
+      --m: #8aa3b8;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px)
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      height: 100%;
+      scroll-padding-top: env(safe-area-inset-top, 0px)
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(ellipse at 50% 35%, #0b1c33, #05080d 70%);
+      color: var(--t);
+      font: 13px/1.35 Inter, system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    body.hc {
+      --t: #fff;
+      --m: #cfdde9;
+      --b: rgba(120, 220, 255, .65)
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+      color: inherit
+    }
+
+    button {
+      background: rgba(63, 208, 255, .07);
+      border: 1px solid var(--b);
+      border-radius: 8px;
+      padding: 4px 9px;
+      cursor: pointer;
+      transition: .2s
+    }
+
+    button:hover,
+    button.on {
+      background: rgba(63, 208, 255, .22);
+      border-color: var(--c)
+    }
+
+    input,
+    select {
+      background: rgba(0, 0, 0, .4);
+      border: 1px solid var(--b);
+      border-radius: 8px;
+      padding: 5px 8px
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--c);
+      outline-offset: 1px
+    }
+
+    header {
+      height: 52px;
+      flex: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--b);
+      background: rgba(5, 8, 13, .75)
+    }
+
+    .nasa {
+      font: 600 15px Orbitron, sans-serif;
+      letter-spacing: .15em;
+      color: #fff;
+      background: #0b3d91;
+      padding: 2px 9px;
+      border-radius: 14px
+    }
+
+    .ttl {
+      font: 500 12px 'Space Grotesk', sans-serif;
+      letter-spacing: .18em;
+      white-space: nowrap
+    }
+
+    nav {
+      display: flex;
+      gap: 2px;
+      margin: 0 auto;
+      overflow-x: auto
+    }
+
+    nav button {
+      border: 0;
+      background: none;
+      font-size: 11px;
+      letter-spacing: .12em;
+      color: var(--m);
+      border-radius: 0
+    }
+
+    nav button.on {
+      color: var(--c);
+      box-shadow: inset 0 -2px var(--c)
+    }
+
+    .hb {
+      display: flex;
+      gap: 6px
+    }
+
+    .ds {
+      font: 600 9px Orbitron, sans-serif;
+      color: #ffb454;
+      border: 1px solid #ffb45466;
+      border-radius: 10px;
+      padding: 2px 7px;
+      white-space: nowrap
+    }
+
+    main {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 250px 1fr 300px;
+      grid-template-rows: 1fr 300px;
+      gap: 10px;
+      padding: 10px
+    }
+
+    .g {
+      background: var(--p);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--b);
+      border-radius: 16px;
+      padding: 10px;
+      min-width: 0;
+      min-height: 0
+    }
+
+    #L {
+      grid-row: 1/3;
+      overflow: auto
+    }
+
+    #gw {
+      grid-column: 2;
+      position: relative;
+      padding: 0;
+      overflow: hidden
+    }
+
+    #bot {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      gap: 10px;
+      min-height: 0
+    }
+
+    #R {
+      grid-column: 3;
+      grid-row: 1/3;
+      overflow: auto
+    }
+
+    #cp {
+      flex: 1;
+      display: flex;
+      flex-direction: column
+    }
+
+    #ap {
+      width: 310px;
+      overflow: auto;
+      flex: none
+    }
+
+    .lbl {
+      font: 600 10px Orbitron, sans-serif;
+      letter-spacing: .14em;
+      color: var(--c)
+    }
+
+    .sm {
+      font-size: 11px;
+      color: var(--m)
+    }
+
+    .r {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px
+    }
+
+    .r2 {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin: 6px 0
+    }
+
+    .card {
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 8px;
+      margin-top: 7px;
+      background: rgba(255, 255, 255, .03);
+      cursor: pointer;
+      transition: .25s
+    }
+
+    .card:hover {
+      background: rgba(63, 208, 255, .08)
+    }
+
+    .card.on {
+      border-color: var(--c);
+      box-shadow: 0 0 14px rgba(63, 208, 255, .35)
+    }
+
+    .card b {
+      font: 600 10px 'Space Grotesk', sans-serif;
+      letter-spacing: .08em
+    }
+
+    .v {
+      font: 500 19px 'Space Grotesk', sans-serif
+    }
+
+    .v small {
+      font-size: 11px;
+      color: var(--m)
+    }
+
+    .up {
+      color: #ffb454
+    }
+
+    .dn {
+      color: #5ce1a8
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: #06101b;
+      z-index: 0
+    }
+
+    #map .leaflet-control-zoom {
+      display: none
+    }
+
+    #map .leaflet-control-attribution {
+      background: rgba(4, 10, 18, .72) !important;
+      color: #9ab3c7 !important;
+      font-size: 9px !important
+    }
+
+    #map .leaflet-control-attribution a {
+      color: #6edcff !important
+    }
+
+    #map .leaflet-popup-content-wrapper,
+    #map .leaflet-popup-tip {
+      background: #081522;
+      color: #dbeaf6;
+      border: 1px solid rgba(90, 200, 255, .35)
+    }
+
+    #map .leaflet-popup-content {
+      font: 12px Inter, sans-serif
+    }
+
+    #map .leaflet-container {
+      font: 11px Inter, sans-serif
+    }
+
+    .map-marker {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #3fd0ff;
+      box-shadow: 0 0 0 4px rgba(63, 208, 255, .2), 0 0 18px #3fd0ff
+    }
+
+    .map-controls {
+      position: absolute;
+      top: 54px;
+      right: 10px;
+      z-index: 900;
+      display: flex;
+      flex-direction: column;
+      gap: 5px
+    }
+
+    .map-controls button {
+      min-width: 42px;
+      height: 34px;
+      background: rgba(7, 17, 30, .88);
+      backdrop-filter: blur(8px);
+      font: 600 15px Inter, sans-serif
+    }
+
+    #mapmode {
+      position: absolute;
+      top: 10px;
+      right: 130px;
+      z-index: 900;
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: rgba(7, 17, 30, .82);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--b);
+      border-radius: 10px
+    }
+
+    #mapmode button {
+      font-size: 10px;
+      letter-spacing: .06em
+    }
+
+    #mapmode button.on {
+      background: rgba(63, 208, 255, .24);
+      color: #fff
+    }
+
+    #mapstatus {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      z-index: 900;
+      padding: 5px 8px;
+      border-radius: 8px;
+      background: rgba(4, 10, 18, .78);
+      border: 1px solid var(--b);
+      font-size: 10px;
+      color: var(--m)
+    }
+
+    .env-point {
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(63, 208, 255, .25)
+    }
+
+    .ov {
+      position: absolute;
+      display: flex;
+      gap: 6px
+    }
+
+    #sr {
+      top: 10px;
+      left: 10px;
+      right: 110px;
+      flex-wrap: wrap
+    }
+
+    #sr input {
+      width: 240px;
+      max-width: 100%
+    }
+
+    #ctl {
+      top: 10px;
+      right: 10px;
+      flex-direction: column
+    }
+
+    #ctl button {
+      background: var(--p)
+    }
+
+    #lg {
+      bottom: 10px;
+      left: 10px;
+      flex-direction: column;
+      max-width: 260px;
+      padding: 8px 10px
+    }
+
+    #hi {
+      bottom: 10px;
+      right: 10px;
+      font-size: 11px;
+      color: var(--m);
+      text-align: right
+    }
+
+    #lay {
+      top: 50px;
+      right: 70px;
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 10px
+    }
+
+    #lay.open {
+      display: flex
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 4px;
+      margin: 5px 0 2px
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2px 6px;
+      padding: 6px;
+      border-radius: 8px;
+      cursor: pointer
+    }
+
+    .row:hover,
+    .row.on {
+      background: rgba(63, 208, 255, .12)
+    }
+
+    h2 {
+      margin: 2px 0;
+      font: 500 20px 'Space Grotesk', sans-serif;
+      letter-spacing: .06em
+    }
+
+    .co {
+      font: 12px 'Space Grotesk', sans-serif;
+      color: var(--c)
+    }
+
+    #chart,
+    #viz {
+      width: 100%;
+      display: block
+    }
+
+    #chart {
+      flex: 1;
+      min-height: 0;
+      cursor: crosshair
+    }
+
+    #viz {
+      height: 80px;
+      background: rgba(0, 0, 0, .3);
+      border-radius: 8px
+    }
+
+    .rg {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      margin: 4px 0
+    }
+
+    .rg button {
+      padding: 2px 7px;
+      font-size: 11px
+    }
+
+    .st {
+      font: 600 10px Orbitron, sans-serif;
+      color: var(--c)
+    }
+
+    #tip {
+      position: fixed;
+      pointer-events: none;
+      background: #000c;
+      border: 1px solid var(--b);
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 11px;
+      display: none;
+      z-index: 5
+    }
+
+    #tl {
+      width: 100%
+    }
+
+    details {
+      margin-top: 6px
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--c);
+      font-size: 11px
+    }
+
+    .mx {
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      gap: 4px;
+      align-items: center;
+      font-size: 11px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px
+    }
+
+    td,
+    th {
+      padding: 3px 4px;
+      border-bottom: 1px solid #ffffff14;
+      text-align: left
+    }
+
+    .mb {
+      height: 3px;
+      background: var(--c);
+      border-radius: 2px
+    }
+
+    #side {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 290px;
+      z-index: 20;
+      transform: translateX(-105%);
+      transition: transform .3s;
+      background: rgba(6, 12, 22, .94);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid var(--b);
+      padding: 16px;
+      overflow: auto
+    }
+
+    #side.open {
+      transform: none
+    }
+
+    #side button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin: 3px 0;
+      border-color: transparent;
+      letter-spacing: .1em;
+      font-size: 12px
+    }
+
+    #sc {
+      position: fixed;
+      inset: 0;
+      background: #0009;
+      z-index: 15;
+      display: none
+    }
+
+    #sc.open {
+      display: block
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: #000b;
+      z-index: 30;
+      display: none;
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal.open {
+      display: flex
+    }
+
+    .modal form {
+      width: 340px;
+      max-width: 92vw;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #08111d;
+      border: 1px solid var(--b);
+      border-radius: 16px;
+      padding: 18px
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #08111df0;
+      border: 1px solid var(--c);
+      border-radius: 10px;
+      padding: 8px 14px;
+      z-index: 40;
+      display: none;
+      max-width: 90vw
+    }
+
+    #load {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: #05080d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font: 600 12px Orbitron, sans-serif;
+      letter-spacing: .2em;
+      color: var(--c);
+      transition: opacity .5s
+    }
+
+    #err {
+      display: none;
+      position: absolute;
+      top: 56px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      background: #3a0d0d;
+      border: 1px solid #f55;
+      border-radius: 8px;
+      padding: 6px 12px
+    }
+
+    .sr {
+      position: absolute;
+      left: -9999px
+    }
+
+    .disc {
+      font-size: 10px;
+      color: var(--m);
+      margin-top: 10px
+    }
+
+    @media(max-width:900px) {
+      body {
+        overflow: auto;
+        height: auto;
+        min-height: 100%
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        overflow: visible
+      }
+
+      #gw {
+        height: 62vh;
+        order: 1;
+        flex: none
+      }
+
+      #L {
+        order: 2
+      }
+
+      #R {
+        order: 3
+      }
+
+      #bot {
+        order: 4;
+        flex-direction: column
+      }
+
+      #cp {
+        height: 360px
+      }
+
+      #ap {
+        width: auto
+      }
+
+      nav,
+      .ttl {
+        display: none
+      }
+    }
+
+    /* ===== SPACE APPS SCIENCE UPGRADE ===== */
+    .sa-tools {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 10px;
+      z-index: 1200;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      pointer-events: none
+    }
+
+    .sa-tools>* {
+      pointer-events: auto
+    }
+
+    .sa-pill {
+      font: 600 9px Orbitron, sans-serif;
+      letter-spacing: .08em;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: rgba(3, 10, 18, .92);
+      border: 1px solid var(--b);
+      color: var(--m)
+    }
+
+    .sa-pill.nasa {
+      background: #0b3d91;
+      color: #fff
+    }
+
+    .sa-pill.live {
+      color: #7dffb0;
+      border-color: #7dffb055
+    }
+
+    .sa-pill.demo {
+      color: #ffb454;
+      border-color: #ffb45455
+    }
+
+    .sa-modal {
+      position: fixed;
+      inset: 5%;
+      z-index: 5000;
+      background: rgba(3, 8, 15, .98);
+      border: 1px solid var(--b);
+      border-radius: 18px;
+      box-shadow: 0 30px 120px #000;
+      display: none;
+      overflow: auto;
+      padding: 18px
+    }
+
+    .sa-modal.open {
+      display: block
+    }
+
+    .sa-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px
+    }
+
+    .sa-card {
+      background: rgba(63, 208, 255, .035);
+      border: 1px solid var(--b);
+      border-radius: 12px;
+      padding: 12px
+    }
+
+    .sa-card h3 {
+      margin: 0 0 6px;
+      color: #fff;
+      font-size: 13px
+    }
+
+    .sa-card p,
+    .sa-card li {
+      font-size: 11px;
+      color: var(--m);
+      line-height: 1.5
+    }
+
+    .sa-card b {
+      color: #fff
+    }
+
+    .sa-close {
+      float: right
+    }
+
+    .sa-section-title {
+      font: 600 11px Orbitron;
+      color: var(--c);
+      letter-spacing: .12em
+    }
+
+    .sa-timeline {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px
+    }
+
+    .sa-timeline input {
+      flex: 1
+    }
+
+    .sa-read {
+      font-size: 10px;
+      color: var(--m);
+      margin-top: 5px
+    }
+
+    .sa-unc {
+      margin-top: 5px;
+      padding: 6px;
+      border-left: 2px solid var(--c);
+      background: rgba(63, 208, 255, .045);
+      font-size: 10px;
+      color: var(--m)
+    }
+
+    .sa-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px
+    }
+
+    .sa-table th,
+    .sa-table td {
+      border-bottom: 1px solid var(--b);
+      padding: 6px;
+      text-align: left
+    }
+
+    .sa-corr {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px
+    }
+
+    .sa-corr div {
+      border: 1px solid var(--b);
+      border-radius: 8px;
+      padding: 7px
+    }
+
+    .sa-note {
+      font-size: 10px;
+      color: var(--m);
+      line-height: 1.5
+    }
+
+    .sa-mission {
+      position: fixed;
+      inset: 0;
+      z-index: 5100;
+      background: rgba(2, 6, 12, .98);
+      display: none;
+      overflow: auto
+    }
+
+    .sa-mission.open {
+      display: block
+    }
+
+    .sa-mission-inner {
+      max-width: 1050px;
+      margin: auto;
+      padding: 7vh 24px
+    }
+
+    .sa-step {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 14px;
+      margin: 24px 0
+    }
+
+    .sa-num {
+      font: 600 24px Orbitron;
+      color: var(--c)
+    }
+
+    .sa-step h2 {
+      font: 600 16px Orbitron;
+      color: #fff
+    }
+
+    .sa-step p {
+      font-size: 12px;
+      color: var(--m);
+      line-height: 1.6
+    }
+
+    @media(max-width:850px) {
+
+      .sa-grid,
+      .sa-corr {
+        grid-template-columns: 1fr
+      }
+
+      .sa-modal {
+        inset: 2%
+      }
+
+      .sa-mission-inner {
+        padding: 4vh 14px
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+  <div id="load">
+    <div id="lt">INITIALIZING EARTH OBSERVATION SYSTEM...</div>
+  </div>
+  <header><button id="hb" aria-label="Open menu" aria-expanded="false">☰</button><span class="nasa">NASA</span><span
+      class="ttl">GLOBAL ENVIRONMENTAL MONITOR</span>
+    <nav id="nav" aria-label="Primary"></nav><span class="ds">DATA STATUS: DEMO DATA</span>
+    <div class="hb"><button id="bs" aria-label="Search">🔍</button><button id="bn"
+        aria-label="Notifications">🔔</button><button id="bg" aria-label="Settings">⚙</button><button id="bu"
+        aria-label="Profile">👤</button></div>
+  </header>
+  <main>
+    <section class="g" id="L" aria-label="Environmental parameters">
+      <div class="lbl">ENVIRONMENTAL PARAMETERS</div>
+      <div class="sm">Global statistics · DEMO DATA</div>
+      <div id="cards"></div>
+    </section>
+    <section class="g" id="gw" aria-label="Interactive real world map">
+      <div id="map" role="application" aria-label="Interactive world map"></div>
+      <div id="err">DATA TEMPORARILY UNAVAILABLE <button id="retry">RETRY</button></div>
+      <div class="ov" id="sr"><input id="q" placeholder="City, country or lat,lon (23.8103,90.4125)"
+          aria-label="Search location" list="dl"><datalist id="dl"></datalist><button id="an">ANALYZE LOCATION</button>
+      </div>
+      <div class="ov" id="mapmode"><button id="bmmap" class="on">MAP</button><button
+          id="bmsat">SATELLITE</button><button id="bmter">TERRAIN</button></div>
+      <div class="ov" id="ctl"><button id="zi" aria-label="Zoom in">+</button><button id="zo"
+          aria-label="Zoom out">−</button><button id="rs">RESET</button><button id="mloc"
+          aria-label="Use my current location">⌖</button><button id="ly">LAYERS</button><button
+          id="fs">FULLSCREEN</button></div>
+      <div id="mapstatus">REAL INTERACTIVE MAP · MAP DATA</div>
+      <div class="ov g" id="lay"><label>Environmental layer <select id="lsel"></select></label><label><input
+            type="checkbox" id="envvis" checked> Environmental overlay</label><label><input type="checkbox" id="labels"
+            checked> Map labels</label></div>
+      <div class="ov g" id="lg"></div>
+      <div class="ov" id="hi"></div>
+    </section>
+    <div id="bot">
+      <section class="g" id="cp" aria-label="Environmental trend analysis">
+        <div class="r"><span class="lbl">ENVIRONMENTAL TREND ANALYSIS</span><span class="rg" id="modes"></span></div>
+        <div class="rg" id="rng"></div>
+        <div class="rg" id="ext"></div>
+        <div class="sm" id="sts"></div><canvas id="chart" aria-label="Trend chart"></canvas>
+        <div class="sr" id="sum" aria-live="polite"></div>
+      </section>
+      <section class="g" id="ap" aria-label="Environmental sonification">
+        <div class="r"><span class="lbl">ENVIRONMENTAL SONIFICATION</span><span class="st" id="ast">AUDIO: PAUSED</span>
+        </div>
+        <div class="sm">DATA SONIFICATION · <span id="asrc"></span></div>
+        <div class="r2"><button id="bp">▶ PLAY</button><button id="bpa">❚❚ PAUSE</button><button
+            id="bm">MUTE</button><input id="vol" type="range" min="0" max="1" step=".01" value=".5" aria-label="Volume"
+            style="width:70px"></div>
+        <canvas id="viz" aria-label="Audio waveform, spectrum and amplitude meter"></canvas><input id="tl" type="range"
+          min="0" max="1000" value="1000" aria-label="Audio timeline">
+        <div class="r sm"><span id="t0"></span><span id="tv"></span><span id="t1"></span></div>
+        <button id="bal" style="margin-top:6px">MODE: SINGLE METRIC</button>
+        <details>
+          <summary>AUDIO MIXER (ALL PARAMETERS)</summary>
+          <div id="mix"></div>
+        </details>
+        <details>
+          <summary>HOW SOUND REPRESENTS DATA</summary>
+          <div class="sm">Pitch → value/trend · Amplitude → magnitude · Speed (modulation) → rate of change · Timbre →
+            metric identity &amp; variability. Sounds are a data sonification, not natural recordings.</div>
+        </details>
+      </section>
+    </div>
+    <section class="g" id="R" aria-label="Location analysis and insights">
+      <div id="loc"></div>
+      <div id="ins"></div>
+      <div id="cmp"></div>
+      <p class="disc">This interface demonstrates environmental data visualization and sonification. Values labeled DEMO
+        DATA are simulated and are not official measurements.</p>
+    </section>
+  </main>
+  <div id="sc"></div>
+  <aside id="side" aria-label="Menu">
+    <div class="lbl" style="margin-bottom:8px">NAVIGATION</div>
+    <div id="sn"></div>
+    <div class="lbl" style="margin:12px 0 4px">ACCOUNT</div>
+    <div id="sa"></div>
+    <div class="lbl" style="margin:12px 0 4px">SETTINGS</div>
+    <div id="ss"></div>
+  </aside>
+  <div class="modal" id="auth">
+    <form id="af" novalidate>
+      <div class="r"><span class="lbl">DEMO AUTHENTICATION</span><button type="button" id="ax"
+          aria-label="Close">✕</button></div>
+      <div class="rg"><button type="button" data-at="s" class="on">SIGN IN</button><button type="button"
+          data-at="c">CREATE ACCOUNT</button></div>
+      <input id="an1" placeholder="Name" autocomplete="name"><input id="ae" type="email" placeholder="Email"
+        autocomplete="email"><input id="ap1" type="password" placeholder="Password (8+ chars)"
+        autocomplete="current-password"><input id="ac" type="password" placeholder="Confirm password">
+      <label id="rm"><input type="checkbox"> Remember me</label><a href="#" id="fg" class="sm">Forgot password?</a>
+      <div id="aerr" class="up sm" role="alert"></div><button id="asub" type="submit">SIGN IN</button>
+      <div class="sm">No backend: nothing is sent or stored. Frontend validation only.</div>
+    </form>
+  </div>
+  <div id="tip"></div>
+  <div id="toast" role="status"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const $ = s => document.querySelector(s), clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), D = Math.PI / 180, END = 2026.75, MS = 864e5 * 365;
+    const hsh = x => { x = Math.sin(x * 127.1) * 43758.5453; return x - Math.floor(x) };
+    /* ---------- DEMO DATA SERVICE (replaceable by real APIs) ---------- */
+    const M = [
+      { id: 'temp', n: 'GLOBAL TEMPERATURE', u: '°C', ic: '🌡', b: 14.5, a: 26, tr: .026, lo: -25, hi: 40, dp: 1, g: l => Math.cos(l * D) ** 1.3 * 2 - 1, ramp: ['#2b3cff', '#3fd0ff', '#7dffb0', '#ffe55c', '#ff4a2e'], s: { w: 'sine', w2: 'triangle', r: 1.5, flt: 'lowpass', fc: 2000, lfo: .15, tgt: 'f', d: 12, f: [150, 600] } },
+      { id: 'co2', n: 'ATMOSPHERIC CO₂', u: 'ppm', ic: '☁', b: 421, a: 7, tr: 2.4, lo: 300, hi: 800, dp: 1, g: l => Math.cos((l - 25) * D) * .8, ramp: ['#0b2a4a', '#1f7aa8', '#7dd6c4', '#f4d35e', '#ee6c4d'], s: { w: 'sine', w2: 'sine', r: .5, flt: 'lowpass', fc: 500, lfo: 1.1, tgt: 'a', d: .45, f: [45, 130] } },
+      { id: 'sea', n: 'SEA LEVEL RISE', u: 'mm/yr', ic: '🌊', b: 3.7, a: 1.6, tr: .08, lo: 0, hi: 12, dp: 2, g: l => Math.sin(l * D * 2) * .6, ramp: ['#ff9f43', '#f6e7b0', '#3fd0ff', '#2b6bff', '#1b2a8f'], s: { w: 'sawtooth', w2: 'sine', r: 1.005, flt: 'lowpass', fc: 450, lfo: .12, tgt: 'a', d: .4, f: [80, 220] } },
+      { id: 'o3', n: 'OZONE SHIELD', u: 'DU', ic: '◌', b: 295, a: 55, tr: -.12, lo: 200, hi: 400, dp: 0, g: l => Math.abs(l) / 45 - 1, ramp: ['#5b1a8f', '#2b6bff', '#3fd0ff', '#b8f2ff', '#ffffff'], s: { w: 'sine', w2: 'sine', r: 2.99, flt: 'highpass', fc: 500, lfo: .35, tgt: 'f', d: 15, f: [700, 1800] } },
+      { id: 'soil', n: 'SOIL MOISTURE ANOMALY', u: '% anomaly', ic: '🌱', b: 0, a: 11, tr: -.08, lo: -25, hi: 25, dp: 1, g: l => Math.sin(l * D * 3) * .7, ramp: ['#a0642a', '#e0b46a', '#f2f2d0', '#5ce1a8', '#0e8f9f'], s: { w: 'triangle', w2: 'sine', r: 1.25, flt: 'lowpass', fc: 1200, lfo: .6, tgt: 'f', d: 35, f: [110, 330] } },
+      { id: 'co', n: 'CARBON MONOXIDE', u: 'ppb', ic: '♨', b: 95, a: 45, tr: -.4, lo: 30, hi: 200, dp: 0, g: l => Math.cos((l - 30) * D) * 1.2 - .4, ramp: ['#12233a', '#2b6bff', '#a35cff', '#ff5cb0', '#ffd15c'], s: { w: 'sine', w2: 'triangle', r: 2, flt: 'lowpass', fc: 900, lfo: 2.2, tgt: 'a', d: .25, f: [90, 260] } },
+      { id: 'n2o', n: 'NITROUS OXIDE', u: 'ppb', ic: '⚗', b: 335, a: 3, tr: .95, lo: 270, hi: 420, dp: 1, g: l => Math.cos((l - 10) * D) * .6, ramp: ['#0f2a2a', '#1f8f7a', '#7dff9a', '#e8ff5c', '#ff8a3c'], s: { w: 'sine', w2: 'sine', r: 1.335, flt: 'lowpass', fc: 1500, lfo: .08, tgt: 'f', d: 20, f: [120, 420] } }];
+    const MM = {}; M.forEach((m, i) => { m.i = i; MM[m.id] = m });
+    const CITIES = [['Dhaka', 'Bangladesh', 'Dhaka Division', 23.8103, 90.4125], ['Tokyo', 'Japan', 'Kantō', 35.68, 139.69], ['New York', 'United States', 'New York', 40.71, -74.01], ['London', 'United Kingdom', 'England', 51.51, -.13], ['Paris', 'France', 'Île-de-France', 48.86, 2.35], ['Delhi', 'India', 'Delhi NCR', 28.61, 77.21], ['Beijing', 'China', 'Beijing', 39.9, 116.4], ['Sydney', 'Australia', 'New South Wales', -33.87, 151.21], ['Cairo', 'Egypt', 'Cairo Governorate', 30.04, 31.24], ['Lagos', 'Nigeria', 'Lagos State', 6.52, 3.38], ['Nairobi', 'Kenya', 'Nairobi County', -1.29, 36.82], ['São Paulo', 'Brazil', 'São Paulo', -23.55, -46.63], ['Mexico City', 'Mexico', 'CDMX', 19.43, -99.13], ['Moscow', 'Russia', 'Moscow', 55.75, 37.62], ['Jakarta', 'Indonesia', 'Java', -6.2, 106.85], ['Riyadh', 'Saudi Arabia', 'Riyadh Province', 24.71, 46.68], ['Los Angeles', 'United States', 'California', 34.05, -118.24], ['Toronto', 'Canada', 'Ontario', 43.65, -79.38], ['Buenos Aires', 'Argentina', 'Buenos Aires', -34.6, -58.38], ['Cape Town', 'South Africa', 'Western Cape', -33.92, 18.42], ['Reykjavik', 'Iceland', 'Capital Region', 64.15, -21.94], ['Singapore', 'Singapore', 'Central', 1.35, 103.82]].map(a => ({ name: a[0], country: a[1], region: a[2], lat: a[3], lon: a[4] }));
+    const sp = (m, la, lo) => clamp(m.g(la) * .75 + Math.sin(lo * D * 2 + m.i * 1.7) * .35 * Math.cos(la * D), -1, 1);
+    const val = (m, la, lo, t, n) => { let v = m.b + m.a * sp(m, la, lo) + m.tr * (t - END); if (n) v += m.a * .04 * Math.sin(6.283 * t) * (la < 0 ? -1 : 1) + (hsh(la * 7.3 + lo * 3.1 + Math.round(t * 8760) + m.i) - .5) * m.a * .03; return v };
+    const gv = (m, t, n) => { let s = 0, w = 0; for (let la = -75; la <= 75; la += 30)for (let lo = -165; lo <= 165; lo += 30) { const c = Math.cos(la * D); s += val(m, la, lo, t, n) * c; w += c } return s / w };
+    const lv = (L, m, t, n) => L && !L.g ? val(m, L.lat, L.lon, t, n) : gv(m, t, n);
+    const Svc = {
+      getLocations: () => CITIES,
+      getCurrentData(L, m) { const v = lv(L, m, END, 0), p = lv(L, m, END - 1, 0); return { v, ch: (v - p) / Math.max(Math.abs(p), m.a) * 100, tr: v >= p ? 1 : -1 } },
+      getHistoricalData(L, m, t0, t1, n) { const o = []; for (let i = 0; i < n; i++) { const t = t0 + (t1 - t0) * i / (n - 1); o.push({ t, v: lv(L, m, t, 1) }) } return o },
+      getProjectionData(L, m, Y) { const b = lv(L, m, END, 0), o = []; for (let k = 1; k <= 40; k++) { const t = END + (Y - END) * k / 40, d = t - END, v = b + m.tr * d * (1 + .012 * d), u = Math.abs(m.tr) * d * (.15 + .004 * d) + m.a * .004 * Math.sqrt(d); o.push({ t, v, lo: v - u, hi: v + u }) } return o },
+      getGlobalData(m) { const c = this.getCurrentData(null, m); return { c, sp: this.getHistoricalData(null, m, END - 10, END, 20).map(q => q.v) } }
+    };
+    /* ---------- STATE ---------- */
+    const RG = { '24H': [1 / 365, 24], '7D': [7 / 365, 28], '30D': [30 / 365, 30], '3M': [.25, 36], '1Y': [1, 48], '5Y': [5, 60], '10Y': [10, 60], '25Y': [25, 60], '50Y': [50, 60] };
+    const S = { m: 'temp', loc: { g: 1, name: 'GLOBAL' }, sel: null, range: '25Y', ct: [2000, END], mode: 'HISTORICAL', pY: 2050, u: 'C', cmp: [], p: 1, playing: 0, muted: 0, vol: .5, amode: 's', mix: {}, mmute: {}, data: {}, layer: 'auto', base: 'map', nav: 'ov', fr: 0, hov: null, notif: 1, user: null, atab: 's' };
+    M.forEach(m => S.mix[m.id] = .7);
+    const $$ = s => [...document.querySelectorAll(s)], cM = () => MM[S.m], lm = () => S.layer === 'auto' ? cM() : MM[S.layer];
+    const f = (m, v) => (m.id === 'temp' && S.u === 'F' ? v * 1.8 + 32 : v).toFixed(m.dp), uu = m => m.id === 'temp' ? '°' + S.u : m.u, arr = x => x >= 0 ? '▲' : '▼', cls = x => x >= 0 ? 'up' : 'dn';
+    const ll = L => L.g ? '—' : `${Math.abs(L.lat).toFixed(4)}° ${L.lat >= 0 ? 'N' : 'S'}  ${Math.abs(L.lon).toFixed(4)}° ${L.lon >= 0 ? 'E' : 'W'}`;
+    const span = () => S.range === 'CUSTOM' ? [S.ct[0], S.ct[1], 60] : [END - RG[S.range][0], END, RG[S.range][1]];
+    function tstr(t, sp) { const d = new Date(Date.UTC(Math.floor(t), 0, 1) + (t % 1) * MS).toISOString(); return sp < .03 ? d.slice(5, 16).replace('T', ' ') : sp < 3 ? d.slice(0, 10) : sp < 12 ? d.slice(0, 7) : String(Math.round(t)) }
+    const at = (a, p) => { const x = p * (a.length - 1), i = Math.min(a.length - 2, Math.floor(x)), u = x - i; return { t: a[i].t + (a[i + 1].t - a[i].t) * u, v: a[i].v + (a[i + 1].v - a[i].v) * u, dv: a[i + 1].v - a[i].v } };
+    const comb = id => { const d = S.data[id]; return S.mode === 'PROJECTION' ? d.h.concat(d.pr) : d.h };
+    function toast(s) { const t = $('#toast'); t.textContent = s; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => t.style.display = 'none', 3200) }
+    /* ---------- AUDIO ---------- */
+    const A = {
+      ctx: null, L: {}, init() {
+        if (this.ctx) return; const c = this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.master = c.createGain(); const cp = c.createDynamicsCompressor(); this.an = c.createAnalyser(); this.an.fftSize = 2048; this.td = new Uint8Array(2048); this.fd = new Uint8Array(1024); this.master.connect(cp); cp.connect(this.an); this.an.connect(c.destination);
+        M.forEach(m => {
+          const s = m.s, g = c.createGain(), am = c.createGain(), fl = c.createBiquadFilter(), o = c.createOscillator(), o2 = c.createOscillator(), g2 = c.createGain(), l = c.createOscillator(), lg = c.createGain(); g.gain.value = 0; fl.type = s.flt; fl.frequency.value = s.fc; o.type = s.w; o2.type = s.w2; g2.gain.value = .2; l.frequency.value = s.lfo; am.gain.value = s.tgt === 'a' ? 1 - s.d : 1;
+          o.connect(fl); o2.connect(g2); g2.connect(fl); fl.connect(am); am.connect(g); g.connect(this.master); lg.gain.value = s.d; l.connect(lg); if (s.tgt === 'a') lg.connect(am.gain); else { lg.connect(o.detune); lg.connect(o2.detune) } [o, o2, l].forEach(x => x.start()); this.L[m.id] = { g, o, o2, g2, l }
+        })
+      },
+      lp(m) {
+        const d = S.data[m.id], a = comb(m.id); let v, ds = 0; if (S.mode === 'LIVE' && S.hov) v = val(m, S.hov.lat, S.hov.lon, END, 0); else if (S.mode === 'HISTORICAL' || S.mode === 'PROJECTION') { const q = at(a, S.p); v = q.v; ds = q.dv } else v = d.h[d.h.length - 1].v;
+        let mn = 1e9, mx = -1e9, s = 0, s2 = 0; a.forEach(q => { mn = Math.min(mn, q.v); mx = Math.max(mx, q.v); s += q.v; s2 += q.v * q.v }); const n = a.length, mean = s / n, sd = Math.sqrt(Math.max(0, s2 / n - mean * mean));
+        return { n: .4 * clamp((v - m.lo) / (m.hi - m.lo)) + .6 * (mx > mn ? clamp((v - mn) / (mx - mn)) : .5), rate: clamp(Math.abs(ds) / ((mx - mn) / n || 1) * .5), vari: clamp(sd / (m.hi - m.lo) * 8), v }
+      },
+      update() {
+        if (!this.ctx) return; const t = this.ctx.currentTime; this.master.gain.setTargetAtTime(S.muted ? 0 : S.vol, t, .05);
+        M.forEach(m => {
+          const y = this.lp(m), L = this.L[m.id], f = m.s.f[0] * Math.pow(m.s.f[1] / m.s.f[0], y.n); L.o.frequency.setTargetAtTime(f, t, .25); L.o2.frequency.setTargetAtTime(f * m.s.r, t, .25); L.l.frequency.setTargetAtTime(m.s.lfo * (1 + y.rate * 3), t, .3); L.g2.gain.setTargetAtTime(.1 + .6 * y.vari, t, .3);
+          const amp = S.amode === 's' ? (m.id === S.m ? .5 : 0) : (S.mmute[m.id] ? 0 : S.mix[m.id] * .3); L.g.gain.setTargetAtTime(amp, t, .35)
+        })
+      },
+      async play() { this.init(); await this.ctx.resume(); S.playing = 1; this.update(); status() }, pause() { S.playing = 0; if (this.ctx) this.ctx.suspend(); status() }
+    };
+    function status() { $('#ast').textContent = 'AUDIO: ' + (S.muted ? 'MUTED' : S.playing ? 'PLAYING' : 'PAUSED'); $('#bm').textContent = S.muted ? 'UNMUTE' : 'MUTE'; $('#bp').classList.toggle('on', !!S.playing); $('#bpa').classList.toggle('on', !S.playing) }
+    const vz = $('#viz'); let vzOn = 0;
+    function fit(cv) { const r = cv.getBoundingClientRect(), d = devicePixelRatio || 1; if (cv.width !== (r.width * d | 0) || cv.height !== (r.height * d | 0)) { cv.width = r.width * d; cv.height = r.height * d } const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, r.width, r.height] }
+    function drawViz() {
+      const [x, w, h] = fit(vz); x.clearRect(0, 0, w, h); const W = w - 16; x.strokeStyle = '#3fd0ff'; x.lineWidth = 1.5; x.beginPath();
+      if (!A.an) { x.moveTo(0, h * .25); x.lineTo(W, h * .25); x.stroke(); return }
+      A.an.getByteTimeDomainData(A.td); A.an.getByteFrequencyData(A.fd); let e = 0; for (let i = 0; i < W; i += 2) { const s = A.td[Math.floor(i / W * 2048)] / 128 - 1; i ? x.lineTo(i, h * .25 + s * h * .24) : x.moveTo(i, h * .25 + s * h * .24) } x.stroke();
+      A.td.forEach(u => { const s = u / 128 - 1; e += s * s }); for (let b = 0; b < 48; b++) { const v = A.fd[Math.floor(Math.pow(b / 48, 2) * 200) + 1] / 255; x.fillStyle = `hsl(${190 + v * 40},90%,${45 + v * 20}%)`; x.fillRect(b * W / 48, h - v * h * .45, W / 48 - 1, v * h * .45) }
+      const rm = clamp(Math.sqrt(e / 2048) * 4); x.fillStyle = '#5ce1a8'; x.fillRect(w - 12, h - rm * h, 10, rm * h)
+    }
+    /* ---------- REAL INTERACTIVE MAP ---------- */
+    const map = L.map('map', { zoomControl: false, worldCopyJump: true, preferCanvas: true, zoomSnap: .25, minZoom: 1, maxZoom: 18, attributionControl: true }).setView([20, 0], 2);
+    const baseLayers = {
+      map: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }),
+      satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' }),
+      terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap (CC-BY-SA) · © OpenStreetMap contributors' })
+    };
+    baseLayers.map.addTo(map);
+    let envLayer = L.layerGroup().addTo(map), selectedMarker = null, locationCircle = null, userMarker = null;
+    const envPalette = { temp: ['#2b3cff', '#3fd0ff', '#7dffb0', '#ffe55c', '#ff4a2e'], co2: ['#0b2a4a', '#1f7aa8', '#7dd6c4', '#f4d35e', '#ee6c4d'], sea: ['#ff9f43', '#f6e7b0', '#3fd0ff', '#2b6bff', '#1b2a8f'], o3: ['#5b1a8f', '#2b6bff', '#3fd0ff', '#b8f2ff', '#ffffff'], soil: ['#a0642a', '#e0b46a', '#f2f2d0', '#5ce1a8', '#0e8f9f'], co: ['#12233a', '#2b6bff', '#a35cff', '#ff5cb0', '#ffd15c'], n2o: ['#0f2a2a', '#1f8f7a', '#7dff9a', '#e8ff5c', '#ff8a3c'] };
+    function colorFor(m, n) { const stops = envPalette[m.id] || m.ramp; const f = clamp(n) * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(f)), u = f - i; const hx2 = s => [parseInt(s.slice(1, 3), 16), parseInt(s.slice(3, 5), 16), parseInt(s.slice(5, 7), 16)]; const a = hx2(stops[i]), b = hx2(stops[i + 1]); return '#' + a.map((v, k) => Math.round(v + (b[k] - v) * u).toString(16).padStart(2, '0')).join('') }
+    function drawEnvironmentalLayer() { envLayer.clearLayers(); if (!$('#envvis')?.checked) return; const m = lm(); for (let la = -80; la <= 80; la += 8) { for (let lo = -180; lo < 180; lo += 8) { const v = val(m, la, lo, END, 1), n = clamp((v - (m.b - 1.05 * m.a)) / (2.1 * m.a)); L.circle([la, lo], { radius: 520000, stroke: false, fillColor: colorFor(m, n), fillOpacity: .13, interactive: false, className: 'env-point' }).addTo(envLayer) } } }
+    function updateBaseLayer(k) { S.base = k; Object.values(baseLayers).forEach(l => { if (map.hasLayer(l)) map.removeLayer(l) }); baseLayers[k].addTo(map); $('#bmmap').classList.toggle('on', k === 'map'); $('#bmsat').classList.toggle('on', k === 'satellite'); $('#bmter').classList.toggle('on', k === 'terrain'); $('#mapstatus').textContent = (k === 'satellite' ? 'SATELLITE IMAGERY · ESRI' : k === 'terrain' ? 'TERRAIN MAP · OPENTOPO' : 'REAL INTERACTIVE MAP · OPENSTREETMAP'); setTimeout(() => map.invalidateSize(), 50) }
+    function makeMarkerIcon() { return L.divIcon({ className: '', html: '<div class="map-marker"></div>', iconSize: [14, 14], iconAnchor: [7, 7] }) }
+    function updateSelectedMarker() { if (selectedMarker) { map.removeLayer(selectedMarker); selectedMarker = null } if (!S.sel) return; selectedMarker = L.marker([S.sel.lat, S.sel.lon], { icon: makeMarkerIcon(), title: S.sel.name || 'Selected location' }).addTo(map); selectedMarker.bindPopup(`<b>${S.sel.name || 'SELECTED LOCATION'}</b><br>${ll(S.sel)}`).openPopup() }
+    function resetView() { map.setView([20, 0], 2, { animate: true }); S.loc = { g: 1, name: 'GLOBAL' }; S.sel = null; updateSelectedMarker(); drawEnvironmentalLayer(); refresh() }
+    function zoom(d) { map.setZoom(clamp(map.getZoom() + d, 1, 18), { animate: true }) }
+    function flyToLocation(L) { if (!L || L.g) return; map.flyTo([L.lat, L.lon], Math.max(6, Math.min(10, map.getZoom() + 3)), { duration: 1.2 }); updateSelectedMarker() }
+    function fallbackLocation(la, lo) { const [c, d] = near(la, lo); return d < 3 ? { ...c, name: c.name.toUpperCase(), lat: la, lon: lo } : d < 30 ? { name: 'NEAR ' + c.name.toUpperCase(), country: c.country, region: c.region + ' (nearest reference city)', lat: la, lon: lo } : { name: 'REMOTE AREA', country: 'No reference city nearby', region: '', lat: la, lon: lo } }
+    async function reverseGeocode(la, lo) { try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(la)}&lon=${encodeURIComponent(lo)}&zoom=10&addressdetails=1`, { headers: { Accept: 'application/json' } }); if (!r.ok) throw Error('reverse geocode failed'); const j = await r.json(), a = j.address || {}; return { name: (a.city || a.town || a.village || a.municipality || a.county || 'SELECTED AREA').toUpperCase(), country: a.country || 'Unknown', region: a.state || a.region || a.province || '', lat: la, lon: lo } } catch (e) { return fallbackLocation(la, lo) } }
+    async function selectMapLocation(la, lo, opts = { fly: true }) { const Lc = await reverseGeocode(la, lo); S.loc = Lc; S.sel = Lc; if (opts.fly) map.flyTo([la, lo], Math.max(6, Math.min(10, map.getZoom() + 2)), { duration: .9 }); updateSelectedMarker(); refresh() }
+    map.on('click', e => selectMapLocation(e.latlng.lat, e.latlng.lng));
+    map.on('mousemove', e => { const m = lm(); $('#hi').textContent = `${Math.abs(e.latlng.lat).toFixed(2)}°${e.latlng.lat >= 0 ? 'N' : 'S'} ${Math.abs(e.latlng.lng).toFixed(2)}°${e.latlng.lng >= 0 ? 'E' : 'W'} · ${f(m, val(m, e.latlng.lat, e.latlng.lng, END, 0))} ${uu(m)} (DEMO)` });
+    map.on('zoomend moveend', () => $('#mapstatus').textContent = (S.base === 'satellite' ? 'SATELLITE IMAGERY · ESRI' : S.base === 'terrain' ? 'TERRAIN MAP · OPENTOPO' : 'REAL INTERACTIVE MAP · OPENSTREETMAP') + ` · Z${map.getZoom().toFixed(1)}`);
+    function near(la, lo) { let b = null, bd = 1e9; CITIES.forEach(c => { const d = Math.acos(clamp(Math.sin(la * D) * Math.sin(c.lat * D) + Math.cos(la * D) * Math.cos(c.lat * D) * Math.cos((lo - c.lon) * D), -1, 1)) / D; if (d < bd) { bd = d; b = c } }); return [b, bd] }
+    function mk(la, lo) { return fallbackLocation(la, lo) }
+    function selectLoc(L) { if (L.g) { resetView(); return } S.loc = L; S.sel = L; flyToLocation(L); refresh() }
+    async function search() { const raw = $('#q').value.trim(); if (!raw) return; const q = raw.toLowerCase(); const m = q.match(/^(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)$/); if (m) { const a = +m[1], b = +m[2]; if (Math.abs(a) <= 90 && Math.abs(b) <= 180) { await selectMapLocation(a, b); return } } const c = CITIES.find(c => c.name.toLowerCase() === q) || CITIES.find(c => c.country.toLowerCase() === q) || CITIES.find(c => [c.name, c.country, c.region].some(s => s.toLowerCase().includes(q))); if (c) { selectLoc({ ...c, name: c.name.toUpperCase() }); return } try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q=${encodeURIComponent(raw)}`, { headers: { Accept: 'application/json' } }); if (!r.ok) throw Error('geocode failed'); const a = (await r.json())[0]; if (!a) throw Error('not found'); await selectMapLocation(+a.lat, +a.lon) } catch (e) { toast('Location not found. Try a city, country, or latitude,longitude.') } }
+    async function useMyLocation() { if (!navigator.geolocation) { toast('Geolocation is not supported by this browser.'); return } toast('Requesting your current location…'); navigator.geolocation.getCurrentPosition(async p => { const Lc = await reverseGeocode(p.coords.latitude, p.coords.longitude); Lc.name = (Lc.name || 'YOUR CURRENT LOCATION').toUpperCase(); S.loc = Lc; S.sel = Lc; if (userMarker) map.removeLayer(userMarker); userMarker = L.circleMarker([Lc.lat, Lc.lon], { radius: 7, color: '#fff', weight: 2, fillColor: '#3fd0ff', fillOpacity: 1 }).addTo(map).bindPopup('<b>YOUR CURRENT LOCATION</b>').openPopup(); map.flyTo([Lc.lat, Lc.lon], Math.max(7, Math.min(12, map.getZoom() + 3)), { duration: 1.1 }); updateSelectedMarker(); refresh() }, () => toast('Location access was denied. You can search for a location manually.'), { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }) }
+    function updateMapForState() { drawEnvironmentalLayer(); updateSelectedMarker(); if (S.mode === 'LIVE' && S.hov) { map.panTo([S.hov.lat, S.hov.lon], { animate: false }) } }
+    /* ---------- CHART ---------- */
+    const cv = $('#chart'); let brush = null;
+    function drawChart() {
+      const [x, w, h] = fit(cv), m = cM(), d = S.data[m.id]; x.clearRect(0, 0, w, h); if (!d) return; const H = d.h, Pj = S.mode === 'PROJECTION' ? d.pr : null;
+      const t0 = H[0].t, t1 = Pj ? Pj[Pj.length - 1].t : H[H.length - 1].t; let lo = 1e9, hi = -1e9; H.concat(Pj || []).forEach(q => { lo = Math.min(lo, q.lo ?? q.v); hi = Math.max(hi, q.hi ?? q.v) }); const pd = (hi - lo) * .1 || 1; lo -= pd; hi += pd;
+      const L = 46, B = 18, T = 14, Rr = 8, X = t => L + (t - t0) / (t1 - t0) * (w - L - Rr), Y = v => T + (1 - (v - lo) / (hi - lo)) * (h - T - B); cv._m = { X, t0, t1, L, Rr, w, H, Pj, Y };
+      x.font = '10px Inter'; x.fillStyle = '#8aa3b8'; x.strokeStyle = 'rgba(120,200,255,.1)'; x.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4, y = Y(v); x.beginPath(); x.moveTo(L, y); x.lineTo(w - Rr, y); x.stroke(); x.fillText(f(m, v), 2, y + 3) }
+      for (let i = 0; i <= 4; i++) { const t = t0 + (t1 - t0) * i / 4; x.fillText(tstr(t, t1 - t0), Math.min(w - 40, Math.max(L, X(t) - 14)), h - 4) }
+      if (Pj) { x.fillStyle = 'rgba(255,180,84,.16)'; x.beginPath(); x.moveTo(X(END), Y(H[H.length - 1].v)); Pj.forEach(q => x.lineTo(X(q.t), Y(q.hi))); for (let i = Pj.length - 1; i >= 0; i--)x.lineTo(X(Pj[i].t), Y(Pj[i].lo)); x.closePath(); x.fill() }
+      x.strokeStyle = '#3fd0ff'; x.lineWidth = 2; x.setLineDash([]); x.beginPath(); H.forEach((q, i) => i ? x.lineTo(X(q.t), Y(q.v)) : x.moveTo(X(q.t), Y(q.v))); x.stroke();
+      if (Pj) { x.strokeStyle = '#ffb454'; x.setLineDash([6, 4]); x.beginPath(); x.moveTo(X(H[H.length - 1].t), Y(H[H.length - 1].v)); Pj.forEach(q => x.lineTo(X(q.t), Y(q.v))); x.stroke(); x.setLineDash([]); x.fillStyle = '#ffb454'; x.font = '600 9px Orbitron,sans-serif'; x.fillText('MODEL-BASED PROJECTION', w - 160, 10) }
+      const c = cur(); x.strokeStyle = 'rgba(255,255,255,.6)'; x.lineWidth = 1; x.beginPath(); x.moveTo(X(c.t), T); x.lineTo(X(c.t), h - B); x.stroke(); x.fillStyle = '#fff'; x.beginPath(); x.arc(X(c.t), Y(c.v), 4, 0, 7); x.fill();
+      if (brush) { x.fillStyle = 'rgba(63,208,255,.2)'; x.fillRect(Math.min(brush[0], brush[1]), T, Math.abs(brush[1] - brush[0]), h - T - B) }
+    }
+    function cur() { const m = cM(), d = S.data[m.id]; if (S.mode === 'HISTORICAL' || S.mode === 'PROJECTION') return at(comb(m.id), S.p); const q = d.h[d.h.length - 1]; return { t: q.t, v: S.mode === 'LIVE' && S.hov ? val(m, S.hov.lat, S.hov.lon, END, 0) : q.v } }
+    cv.addEventListener('mousemove', e => {
+      const o = cv._m; if (!o) return; const r = cv.getBoundingClientRect(), px = e.clientX - r.left; if (brush) { brush[1] = px; S.dirty = 1 }
+      const t = o.t0 + (px - o.L) / (o.w - o.L - o.Rr) * (o.t1 - o.t0), a = o.H.concat(o.Pj || []); let b = a[0]; a.forEach(q => { if (Math.abs(q.t - t) < Math.abs(b.t - t)) b = q }); const m = cM(), tp = $('#tip'); tp.style.display = 'block'; tp.style.left = e.clientX + 12 + 'px'; tp.style.top = e.clientY - 30 + 'px'; tp.textContent = `${tstr(b.t, o.t1 - o.t0)} · ${f(m, b.v)} ${uu(m)}${b.t > END ? ' (projection)' : ''}`
+    });
+    cv.addEventListener('mouseleave', () => { $('#tip').style.display = 'none'; brush = null });
+    cv.addEventListener('mousedown', e => { const r = cv.getBoundingClientRect(); brush = [e.clientX - r.left, e.clientX - r.left] });
+    cv.addEventListener('mouseup', () => { const o = cv._m; if (brush && o && Math.abs(brush[1] - brush[0]) > 10) { const tt = p => o.t0 + (p - o.L) / (o.w - o.L - o.Rr) * (o.t1 - o.t0), a = tt(Math.min(...brush)), b = Math.min(END, tt(Math.max(...brush))); if (b - a > 1 / 365) { S.ct = [a, b]; S.range = 'CUSTOM' } } brush = null; refresh() });
+    cv.addEventListener('dblclick', () => { S.range = '25Y'; refresh() });
+    /* ---------- RENDER ---------- */
+    const GL = {}; const spark = v => { const mn = Math.min(...v), mx = Math.max(...v); return `<svg width="70" height="22" aria-hidden="true"><polyline fill="none" stroke="#3fd0ff" stroke-width="1.5" points="${v.map((y, i) => `${(i * 70 / (v.length - 1)).toFixed(1)},${(21 - (y - mn) / ((mx - mn) || 1) * 19).toFixed(1)}`).join(' ')}"/></svg>` };
+    function stats() { const m = cM(), vs = S.data[m.id].h.map(q => q.v), mn = Math.min(...vs), mx = Math.max(...vs), av = vs.reduce((a, b) => a + b) / vs.length, c = vs[vs.length - 1], ch = (c - vs[0]) / Math.max(Math.abs(vs[0]), m.a) * 100, d = (c - vs[0]) / (m.hi - m.lo) * 100; return { mn, mx, av, c, ch, tr: d > .8 ? 'INCREASING' : d < -.8 ? 'DECREASING' : 'STABLE' } }
+    function render() {
+      $('#err').style.display = S.err ? 'block' : 'none'; if (S.err) return; const m = cM(), L = S.loc;
+      $('#cards').innerHTML = M.map(k => { const g = GL[k.id] || (GL[k.id] = Svc.getGlobalData(k)); return `<div class="card ${k.id === S.m ? 'on' : ''}" data-m="${k.id}" tabindex="0" role="button" aria-pressed="${k.id === S.m}" aria-label="${k.n}"><div class="r"><b>${k.ic} ${k.n}</b></div><div class="v">${f(k, g.c.v)} <small>${uu(k)}</small></div><div class="r"><span class="${cls(g.c.tr)}">${arr(g.c.tr)} ${Math.abs(g.c.ch).toFixed(2)}%</span>${spark(g.sp)}</div></div>` }).join('');
+      const rows = M.map(k => { const c = Svc.getCurrentData(L, k), g = GL[k.id].c, dg = c.v - g.v; return `<div class="row ${k.id === S.m ? 'on' : ''}" data-m="${k.id}" tabindex="0" role="button" title="VIEW ANALYSIS"><b style="font-size:11px">${k.n}</b><span class="${cls(c.tr)}">${arr(c.tr)} ${Math.abs(c.ch).toFixed(2)}%</span><span>${f(k, c.v)} ${uu(k)}</span><span class="sm">vs global ${dg >= 0 ? '+' : ''}${dg.toFixed(k.dp)}</span></div>` }).join('');
+      $('#loc').innerHTML = `<div class="lbl">LOCATION ANALYSIS</div><h2>${L.name}</h2><div class="sm">${L.g ? 'AREA-WEIGHTED GLOBAL MEAN · click the Earth to select a place' : L.country + (L.region ? ' · ' + L.region : '')}</div><div class="co">${ll(L)}</div>${L.g ? '' : '<button id="gl" style="margin:6px 0">BACK TO GLOBAL</button>'}${rows}`;
+      const s = stats(), cu = Svc.getCurrentData(L, m), gl = GL[m.id].c; S.st = s;
+      $('#ins').innerHTML = `<div class="lbl" style="margin-top:10px">ENVIRONMENTAL INSIGHTS</div><p>${m.n} at ${L.name}: <b>${s.tr}</b> over ${S.range}. Current ${f(m, cu.v)} ${uu(m)} vs global ${f(m, gl.v)}. Change ${s.ch.toFixed(2)}%.${S.mode === 'PROJECTION' ? ` Model-based projection to ${S.pY}: ${f(m, S.data[m.id].pr.at(-1).v)} ${uu(m)} (not a measurement).` : ''}</p>`;
+      $('#cmp').innerHTML = `<div class="lbl">COMPARE LOCATIONS</div><div class="rg"><button id="ca">+ ADD SELECTED</button><button id="cc">CLEAR</button></div>${S.cmp.length ? `<table><tr><th></th>${S.cmp.map(c => `<th>${c.name}</th>`).join('')}</tr>${M.map(k => { const vs = S.cmp.map(c => lv(c, k, END, 0)); return `<tr><td>${k.n.split(' ')[0]}</td>${vs.map(v => `<td>${f(k, v)}<div class="mb" style="width:${clamp((v - k.lo) / (k.hi - k.lo)) * 100}%"></div></td>`).join('')}</tr>` }).join('')}</table>` : '<div class="sm">Select places on the Earth and add up to 4.</div>'}`;
+      $('#modes').innerHTML = ['HISTORICAL', 'CURRENT', 'PROJECTION', 'LIVE'].map(k => `<button data-mode="${k}" class="${S.mode === k ? 'on' : ''}">${k}</button>`).join('');
+      $('#rng').innerHTML = [...Object.keys(RG), 'CUSTOM'].map(k => `<button data-r="${k}" class="${S.range === k ? 'on' : ''}">${k}</button>`).join('');
+      const dt = t => new Date(Date.UTC(Math.floor(t), 0, 1) + (t % 1) * MS).toISOString().slice(0, 10);
+      $('#ext').innerHTML = S.range === 'CUSTOM' ? `<label class="sm">Start <input type="date" id="d0" value="${dt(S.ct[0])}"></label><label class="sm">End <input type="date" id="d1" value="${dt(S.ct[1])}"></label>` : '';
+      if (S.mode === 'PROJECTION') $('#ext').innerHTML += [2030, 2040, 2050, 2075, 2100].map(y => `<button data-y="${y}" class="${S.pY === y ? 'on' : ''}">${y}</button>`).join('') + '<span class="sm">MODEL-BASED PROJECTION</span>';
+      $('#sts').innerHTML = `${m.n} · ${L.name} · MIN ${f(m, s.mn)} · MAX ${f(m, s.mx)} · AVG ${f(m, s.av)} · CURRENT ${f(m, s.c)} ${uu(m)} · CHANGE ${s.ch.toFixed(2)}% · <b>${s.tr}</b>`;
+      $('#sum').textContent = `${m.n} at ${L.name}, ${S.range}: ${s.tr}, from ${f(m, s.mn)} to ${f(m, s.mx)} ${uu(m)}, average ${f(m, s.av)}, DEMO DATA.`;
+      const lg = lm(), lo = lg.b - 1.05 * lg.a, hi = lg.b + 1.05 * lg.a; $('#lg').innerHTML = `<div class="lbl">${lg.n}</div><div class="bar" style="background:linear-gradient(90deg,${lg.ramp.join(',')})"></div><div class="r sm"><span>${f(lg, lo)}</span><span>${uu(lg)} · DEMO</span><span>${f(lg, hi)}</span></div>`;
+      const bh = comb(m.id); $('#t0').textContent = tstr(bh[0].t, bh.at(-1).t - bh[0].t); $('#t1').textContent = tstr(bh.at(-1).t, bh.at(-1).t - bh[0].t);
+      $('#asrc').textContent = { HISTORICAL: 'HISTORICAL DATA', CURRENT: 'CURRENT DATA', PROJECTION: 'FUTURE PROJECTION', LIVE: 'LIVE EXPLORATION (hover the Earth)' }[S.mode] + ' · ' + m.n + ' · ' + L.name; $('#tl').disabled = !(S.mode === 'HISTORICAL' || S.mode === 'PROJECTION');
+      $$('#nav button').forEach(b => b.classList.toggle('on', b.dataset.a === S.nav)); status(); S.dirty = 1; A.update(); updateMapForState()
+    }
+    function readout() { const m = cM(), c = cur(), o = cv._m; $('#tv').textContent = `${o ? tstr(c.t, o.t1 - o.t0) : ''} · ${f(m, c.v)} ${uu(m)}`; $('#tl').value = S.p * 1000 }
+    function refresh() { try { const [t0, t1, n] = span(); M.forEach(m => { S.data[m.id] = { h: Svc.getHistoricalData(S.loc, m, t0, t1, n), pr: Svc.getProjectionData(S.loc, m, S.pY) } }); S.err = 0 } catch (e) { S.err = 1 } render() }
+    /* ---------- NAV / SIDEBAR / EVENTS ---------- */
+    const NAV = [['OVERVIEW', 'ov'], ['EARTH', 'earth'], ['CLIMATE', 'temp'], ['ATMOSPHERE', 'co2'], ['OCEAN', 'sea'], ['LAND', 'soil'], ['ANALYTICS', 'an']];
+    $('#nav').innerHTML = NAV.map(a => `<button data-a="${a[1]}">${a[0]}</button>`).join('');
+    $('#sn').innerHTML = [['HOME', 'ov'], ['GLOBAL OVERVIEW', 'ov'], ['LIVE EARTH', 'live'], ['CLIMATE', 'temp'], ['ATMOSPHERE', 'co2'], ['OCEAN', 'sea'], ['LAND', 'soil'], ['ANALYTICS', 'an'], ['HISTORICAL DATA', 'hist'], ['PROJECTIONS', 'proj']].map(a => `<button data-a="${a[1]}">${a[0]}</button>`).join('');
+    $('#dl').innerHTML = CITIES.map(c => `<option value="${c.name}">`).join('');
+    $('#lsel').innerHTML = '<option value="auto">Follow selected metric</option>' + M.map(m => `<option value="${m.id}">${m.n}</option>`).join('');
+    $('#mix').innerHTML = M.map(m => `<div class="mx"><span>${m.n.split(' ')[0]}</span><input type="range" min="0" max="1" step=".01" value=".7" data-mx="${m.id}" aria-label="${m.n} volume"><input type="checkbox" data-mm="${m.id}" title="Mute ${m.n}" aria-label="Mute ${m.n}"></div>`).join('');
+    function sideRender() {
+      $('#sa').innerHTML = S.user ? `<div class="sm">DEMO session: ${S.user}</div><button data-a="out">SIGN OUT</button>` : '<button data-a="in">SIGN IN</button><button data-a="in">LOGIN</button><button data-a="cr">CREATE ACCOUNT</button>';
+      $('#ss').innerHTML = `<button data-a="theme">Theme: ${document.body.classList.contains('hc') ? 'HIGH CONTRAST' : 'DARK'}</button><button data-a="units">Units: °${S.u}</button><button data-a="nt">Notifications: ${S.notif ? 'ON' : 'OFF'}</button><button data-a="dp">Data Preferences: DEMO DATA ONLY</button>`
+    }
+    const side = o => { $('#side').classList.toggle('open', o); $('#sc').classList.toggle('open', o); $('#hb').setAttribute('aria-expanded', o); if (o) sideRender() };
+    function go(a) {
+      const mp = { temp: 1, co2: 1, sea: 1, soil: 1 }; if (mp[a]) { S.m = a; S.nav = a } else if (a === 'atm') { S.m = 'co2' }
+      else if (a === 'ov') { resetView(); S.loc = { g: 1, name: 'GLOBAL' }; S.sel = null; S.mode = 'HISTORICAL'; S.nav = 'ov' } else if (a === 'earth') { resetView(); S.nav = 'earth' } else if (a === 'live') { S.mode = 'LIVE' } else if (a === 'hist') { S.mode = 'HISTORICAL' } else if (a === 'proj') { S.mode = 'PROJECTION' } else if (a === 'an') { S.nav = 'an'; $('#cp').scrollIntoView({ behavior: 'smooth' }); cv.focus() }
+      else if (a === 'in' || a === 'cr') { side(0); authOpen(a === 'cr' ? 'c' : 's'); return } else if (a === 'out') { S.user = null; toast('Signed out of the demo session'); sideRender(); return } else if (a === 'theme') { document.body.classList.toggle('hc'); sideRender(); return }
+      else if (a === 'units') { S.u = S.u === 'C' ? 'F' : 'C'; sideRender() } else if (a === 'nt') { S.notif = !S.notif; sideRender(); return } else if (a === 'dp') { toast('All values are simulated DEMO DATA served by a replaceable data service.'); return }
+      side(0); refresh()
+    }
+    document.addEventListener('click', e => { const t = e.target.closest('[data-m],[data-a],[data-mode],[data-r],[data-y]'); if (!t) return; const d = t.dataset; if (d.m) { S.m = d.m; refresh() } else if (d.a) go(d.a); else if (d.mode) { S.mode = d.mode; S.p = d.mode === 'PROJECTION' ? .5 : 1; refresh() } else if (d.r) { S.range = d.r; refresh() } else if (d.y) { S.pY = +d.y; refresh() } });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.matches('[data-m]')) e.target.click(); const tag = e.target.tagName; if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (e.key === 'Escape') { side(0); $('#auth').classList.remove('open'); $('#lay').classList.remove('open') } else if (e.key === '+' || e.key === '=') zoom(.2); else if (e.key === '-') zoom(-.2); else if (e.key === ' ' && tag === 'BODY') { e.preventDefault(); S.playing ? A.pause() : A.play() }
+    });
+    $('#hb').onclick = () => side(1); $('#sc').onclick = () => side(0); $('#bs').onclick = () => $('#q').focus(); $('#bg').onclick = () => side(1); $('#bn').onclick = () => S.notif ? toast('No alerts. All displayed values are simulated DEMO DATA.') : toast('Notifications are turned off in Settings');
+    $('#zi').onclick = () => zoom(1); $('#zo').onclick = () => zoom(-1); $('#rs').onclick = resetView; $('#ly').onclick = () => $('#lay').classList.toggle('open'); $('#fs').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : $('#gw').requestFullscreen && $('#gw').requestFullscreen() };
+    $('#lsel').onchange = e => { S.layer = e.target.value; drawEnvironmentalLayer(); render() }; $('#envvis').onchange = drawEnvironmentalLayer; $('#bmmap').onclick = () => updateBaseLayer('map'); $('#bmsat').onclick = () => updateBaseLayer('satellite'); $('#bmter').onclick = () => updateBaseLayer('terrain'); $('#mloc').onclick = useMyLocation; $('#an').onclick = search; $('#q').onkeydown = e => { if (e.key === 'Enter') search() }; $('#retry').onclick = refresh;
+    document.addEventListener('change', e => {
+      const t = e.target; if (t.id === 'd0' || t.id === 'd1') { const a = Date.parse($('#d0').value), b = Date.parse($('#d1').value); if (a && b && b > a) { const tt = v => { const d = new Date(v), y = d.getUTCFullYear(); return y + (v - Date.UTC(y, 0, 1)) / MS }; S.ct = [tt(a), Math.min(END, tt(b))]; refresh() } else toast('Choose a valid start and end date') }
+      if (t.dataset.mm) { S.mmute[t.dataset.mm] = t.checked; A.update() }
+    });
+    document.addEventListener('input', e => { const t = e.target; if (t.dataset.mx) { S.mix[t.dataset.mx] = +t.value; A.update() } });
+    document.addEventListener('click', e => { const id = e.target.id; if (id === 'gl') selectLoc({ g: 1, name: 'GLOBAL' }); if (id === 'ca') { if (!S.sel) toast('Select a location on the Earth first'); else if (!S.cmp.find(c => c.name === S.sel.name) && S.cmp.length < 4) { S.cmp.push(S.sel); render() } } if (id === 'cc') { S.cmp = []; render() } });
+    $('#bp').onclick = () => A.play(); $('#bpa').onclick = () => A.pause(); $('#bm').onclick = () => { S.muted = !S.muted; A.update(); status() }; $('#vol').oninput = e => { S.vol = +e.target.value; A.update() };
+    $('#tl').oninput = e => { S.p = e.target.value / 1000; S.dirty = 1; A.update() }; $('#bal').onclick = () => { S.amode = S.amode === 's' ? 'a' : 's'; $('#bal').textContent = S.amode === 's' ? 'MODE: SINGLE METRIC' : 'MODE: ALL PARAMETERS'; A.update() };
+    /* auth (frontend-only demo) */
+    function authOpen(t) { S.atab = t; const c = t === 'c'; $('#auth').classList.add('open'); $$('[data-at]').forEach(b => b.classList.toggle('on', b.dataset.at === t)); $('#an1').style.display = $('#ac').style.display = c ? '' : 'none'; $('#rm').style.display = $('#fg').style.display = c ? 'none' : ''; $('#asub').textContent = c ? 'CREATE ACCOUNT' : 'SIGN IN'; $('#aerr').textContent = '' }
+    $$('[data-at]').forEach(b => b.onclick = () => authOpen(b.dataset.at)); $('#ax').onclick = () => $('#auth').classList.remove('open'); $('#bu').onclick = () => authOpen('s'); $('#fg').onclick = e => { e.preventDefault(); $('#aerr').textContent = 'Demo mode: password recovery is unavailable.' };
+    $('#af').onsubmit = e => {
+      e.preventDefault(); const c = S.atab === 'c', em = $('#ae').value.trim(), pw = $('#ap1').value, er = []; if (c && !$('#an1').value.trim()) er.push('Name is required.'); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) er.push('Enter a valid email.'); if (pw.length < 8) er.push('Password needs 8+ characters.'); if (c && pw !== $('#ac').value) er.push('Passwords do not match.');
+      $('#aerr').textContent = er.join(' '); if (er.length) return; S.user = c ? $('#an1').value.trim() : em; $('#bu').textContent = S.user[0].toUpperCase(); $('#auth').classList.remove('open'); toast('DEMO AUTHENTICATION: no account was created or verified on any server.')
+    };
+    /* main loop */
+    let last = performance.now();
+    function loop(now) {
+      const dt = Math.min(.1, (now - last) / 1000); last = now;
+      if (S.playing) { if (S.mode === 'HISTORICAL' || S.mode === 'PROJECTION') { S.p += dt / 16; if (S.p > 1) S.p = 0; S.dirty = 1 } if (++S.fr % 3 === 0) A.update(); drawViz() }
+      if (S.dirty && S.data[S.m]) { S.dirty = 0; drawChart(); readout() } requestAnimationFrame(loop)
+    }
+    window.addEventListener('pagehide', () => { if (A.ctx) A.ctx.close() }); window.addEventListener('resize', () => { S.dirty = 1; drawViz(); setTimeout(() => map.invalidateSize(), 50) });
+    refresh();['LOADING ENVIRONMENTAL DATA...', 'LOADING ATMOSPHERIC DATA...', 'LOADING ANALYTICS...'].forEach((t, i) => setTimeout(() => $('#lt').textContent = t, 300 * (i + 1)));
+    setTimeout(() => { map.invalidateSize(); $('#load').style.opacity = 0; setTimeout(() => $('#load').remove(), 500); drawViz() }, 1000); requestAnimationFrame(loop);
+
+    /* ===== SPACE APPS LIVE DATA + SCIENCE LAYER ===== */
+    const SA = {
+      liveTemp: null, liveTempHistory: null, liveTempLoadedFor: null, liveTempLoading: false,
+      tmYear: 2026.75, tmPlaying: false, tmTimer: null,
+      sources: {
+        temp: { mission: 'NASA POWER / NASA Langley Research Center', dataset: 'POWER Daily Point', status: 'LIVE WHEN REQUEST SUCCEEDS', definition: 'Near-surface air temperature (T2M) at the selected coordinate. State the temporal aggregation used when interpreting it.' },
+        co2: { mission: 'NASA OCO-2 / OCO-3', dataset: 'XCO₂ atmospheric products', status: 'CONNECTOR / EARTHDATA PRODUCT', definition: 'Column-averaged dry-air mole fraction of CO₂ (XCO₂). A production build should preserve quality flags and retrieval metadata.' },
+        sea: { mission: 'NASA satellite altimetry', dataset: 'NASA/JPL sea-level products', status: 'CONNECTOR / EARTHDATA PRODUCT', definition: 'Sea-level analysis must distinguish absolute sea-surface height, anomaly and rate, including the reference frame/baseline.' },
+        o3: { mission: 'NASA OMI / OMPS / MLS', dataset: 'Total-column ozone products', status: 'NASA WORLDVIEW / EARTHDATA', definition: 'Total column ozone, commonly expressed in Dobson Units. Product, retrieval algorithm and quality screening must be retained.' },
+        soil: { mission: 'NASA SMAP', dataset: 'SMAP global soil-moisture products', status: 'NASA WORLDVIEW / EARTHDATA', definition: 'Surface/root-zone soil moisture. Anomaly requires a documented baseline, depth and quality-control method.' },
+        co: { mission: 'NASA AIRS / MOPITT / MLS', dataset: 'Carbon monoxide atmospheric products', status: 'NASA WORLDVIEW / EARTHDATA', definition: 'CO must specify total column or pressure-level mixing ratio and units. Different products are not interchangeable.' },
+        n2o: { mission: 'NASA/partner atmospheric composition datasets', dataset: 'Nitrous oxide product', status: 'CONNECTOR REQUIRED', definition: 'N₂O needs a verified product, retrieval/averaging convention and uncertainty metadata before values are presented as measured.' }
+      }
+    };
+    const SA_POWER = 'https://power.larc.nasa.gov/api/temporal/monthly/point';
+    function saYmd(y) { return String(y).padStart(4, '0') + '01'; }
+    async function saLoadNASA(lat, lon) {
+      const key = lat.toFixed(3) + ',' + lon.toFixed(3); if (SA.liveTempLoadedFor === key || SA.liveTempLoading) return;
+      SA.liveTempLoading = true; const badge = $('#saDataStatus'); if (badge) badge.textContent = 'NASA POWER · FETCHING TEMPERATURE…';
+      try {
+        const p = new URLSearchParams({ parameters: 'T2M', community: 'SB', longitude: lon.toFixed(4), latitude: lat.toFixed(4), start: '2000', end: String(new Date().getUTCFullYear()), format: 'JSON', time_standard: 'UTC' });
+        const r = await fetch(SA_POWER + '?' + p.toString(), { cache: 'no-store' }); if (!r.ok) throw Error('NASA POWER ' + r.status); const j = await r.json(); const series = j?.properties?.parameter?.T2M;
+        if (!series) throw Error('NASA POWER returned no T2M series');
+        const vals = Object.entries(series).map(([k, v]) => ({ t: +k.slice(0, 4) + ((+k.slice(4, 6) - 1) / 12), v: +v })).filter(x => Number.isFinite(x.v));
+        if (!vals.length) throw Error('No NASA temperature observations');
+        SA.liveTempHistory = vals; SA.liveTempLoadedFor = key; SA.liveTemp = vals.at(-1); badge.className = 'sa-pill live'; badge.textContent = 'NASA POWER LIVE · TEMPERATURE';
+        if (S.m === 'temp') refresh();
+      } catch (e) { console.warn('NASA POWER unavailable', e); if (badge) { badge.className = 'sa-pill demo'; badge.textContent = 'DEMO ENVIRONMENTAL VALUES · NASA TEMPERATURE UNAVAILABLE' } }
+      finally { SA.liveTempLoading = false }
+    }
+    function saTempSeriesFor(loc, t0, t1, n) {
+      if (!SA.liveTempHistory) return null; const a = SA.liveTempHistory.filter(x => x.t >= t0 - .08 && x.t <= t1 + .08); if (a.length < 2) return null;
+      const step = Math.max(1, Math.floor(a.length / n)); const out = []; for (let i = 0; i < a.length; i += step)out.push(a[i]); return out;
+    }
+    function saTempAt(t) {
+      const a = SA.liveTempHistory; if (!a?.length) return null; let best = a[0]; for (const q of a) { if (Math.abs(q.t - t) < Math.abs(best.t - t)) best = q } return best.v;
+    }
+    function saAugmentTemperature() {
+      if (!SA.liveTempHistory || S.m !== 'temp') return; const d = S.data.temp; if (!d) return; const hs = saTempSeriesFor(S.loc, S.ct[0], S.ct[1], Math.max(24, d.h.length)); if (!hs) return;
+      d.h = hs; d.c = hs.at(-1); d.sp = hs.slice(-20); const pr = []; const start = hs.at(-1)?.v ?? d.c.v; for (let y = 2027; y <= S.pY; y++)pr.push({ t: y, v: start + (y - 2026) * 0.025, lo: start + (y - 2026) * 0.01, hi: start + (y - 2026) * 0.04 }); d.pr = pr;
+    }
+    function saProvenanceHTML() {
+      const host = $('#saSources'), defs = $('#saDefinitions'); if (!host) return;
+      host.innerHTML = M.map(m => { const x = SA.sources[m.id]; return `<div class="sa-card"><h3>${m.ic} ${m.n}</h3><p><b>Mission / provider:</b> ${x.mission}</p><p><b>Dataset:</b> ${x.dataset}</p><p><b>Status:</b> ${x.status}</p><p><b>Definition:</b> ${x.definition}</p></div>` }).join('');
+      defs.innerHTML = M.map(m => `<div class="sa-unc"><b>${m.n}</b> — ${SA.sources[m.id].definition}</div>`).join('');
+    }
+    saProvenanceHTML();
+    $('#saMethods')?.addEventListener('click', () => $('#saMethodsModal').classList.add('open')); $('#saMethodsClose')?.addEventListener('click', () => $('#saMethodsModal').classList.remove('open'));
+    $('#saMission')?.addEventListener('click', () => $('#saMissionModal').classList.add('open')); $('#saMissionClose')?.addEventListener('click', () => $('#saMissionModal').classList.remove('open'));
+    $('#saCorrelations')?.addEventListener('click', () => { saRenderCorrelation(); $('#saCorrModal').classList.add('open') }); $('#saCorrClose')?.addEventListener('click', () => $('#saCorrModal').classList.remove('open'));
+    window.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.sa-modal.open,.sa-mission.open').forEach(x => x.classList.remove('open')) });
+    /* NASA GIBS imagery: real NASA Earth-observation imagery. This is imagery, not a point-value measurement API. */
+    try {
+      window.SA_NASA_GIBS = {
+        trueColor: L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi', { layers: 'MODIS_Terra_CorrectedReflectance_TrueColor', format: 'image/jpeg', transparent: false, version: '1.1.1', attribution: 'NASA GIBS / EOSDIS' }),
+        soil: L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi', { layers: 'SMAP_Sentinel-1_L2_Active_Passive_Soil_Moisture', format: 'image/png', transparent: true, version: '1.1.1', opacity: .62, attribution: 'NASA GIBS / SMAP' }),
+        airCO: L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi', { layers: 'AIRS_Aqua_Carbon_Monoxide_500hPa_Day', format: 'image/png', transparent: true, version: '1.1.1', opacity: .58, attribution: 'NASA GIBS / AIRS' }),
+        ozone: L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi', { layers: 'OMI_Aura_Total_Column_Ozone', format: 'image/png', transparent: true, version: '1.1.1', opacity: .58, attribution: 'NASA GIBS / OMI' })
+      };
+      window.SA_NASA_GIBS.trueColor.addTo(map);
+      const b = document.createElement('button'); b.textContent = 'NASA IMAGERY'; b.onclick = () => { const l = window.SA_NASA_GIBS.trueColor; if (map.hasLayer(l)) map.removeLayer(l); else l.addTo(map) }; document.querySelector('.sa-tools')?.appendChild(b);
+    } catch (e) { console.warn('NASA GIBS layer unavailable', e) }
+    function saApplyScienceLayer(metric) {
+      if (!window.SA_NASA_GIBS) return; Object.values(SA_NASA_GIBS).forEach(l => { if (map.hasLayer(l) && l !== SA_NASA_GIBS.trueColor) map.removeLayer(l) });
+      const layer = metric === 'soil' ? SA_NASA_GIBS.soil : metric === 'co' ? SA_NASA_GIBS.airCO : metric === 'o3' ? SA_NASA_GIBS.ozone : null;
+      if (layer) layer.addTo(map);
+    }
+    /* Keep original environmental demo layer as fallback, but add verified NASA imagery where available. */
+    const _drawEnvironmentalLayer = drawEnvironmentalLayer; drawEnvironmentalLayer = function () { _drawEnvironmentalLayer(); saApplyScienceLayer(S.m) };
+    /* Time Machine */
+    function saInstallTimeMachine() {
+      const host = document.querySelector('#bot') || document.querySelector('#cp'); if (!host || document.querySelector('#saTimeMachine')) return;
+      const el = document.createElement('div'); el.id = 'saTimeMachine'; el.className = 'card'; el.innerHTML = `<div class="r"><div><div class="lbl">EARTH TIME MACHINE</div><div id="saTMDate" class="sm">2000 → present</div></div><button id="saTMPlay">▶ PLAY</button></div><div class="sa-timeline"><span class="sm">2000</span><input id="saTMRange" type="range" min="2000" max="2026.99" step="0.01" value="2026.75" aria-label="Earth Time Machine year"><span class="sm">NOW</span></div><div id="saTMRead" class="sa-read"></div><div class="sa-unc" id="saTMUnc">Projection mode: uncertainty band is a demonstration range, not an official forecast interval.</div>`; host.appendChild(el);
+      const r = $('#saTMRange'); function upd() { const t = +r.value; SA.tmYear = t; const m = lm(), v = m.id === 'temp' ? saTempAt(t) : lv(S.loc, m, t, 1); $('#saTMDate').textContent = (t % 1 < .01 ? Math.round(t) : t.toFixed(2)); $('#saTMRead').innerHTML = `<b>${m.n}</b> · ${S.loc.name || 'GLOBAL'} · ${Number.isFinite(v) ? f(m, v) + ' ' + uu(m) : 'No verified point value available for this date'}`; if (S.m === 'temp' && SA.liveTempHistory) $('#saDataStatus').textContent = 'NASA POWER LIVE · TEMPERATURE · TIME CURSOR'; }
+      r.oninput = upd; $('#saTMPlay').onclick = () => { SA.tmPlaying = !SA.tmPlaying; $('#saTMPlay').textContent = SA.tmPlaying ? 'Ⅱ PAUSE' : '▶ PLAY' }; clearInterval(SA.tmTimer); SA.tmTimer = setInterval(() => { if (!SA.tmPlaying) return; r.value = (+r.value + .08) > 2026.99 ? 2000 : +r.value + .08; upd() }, 80); upd();
+    }
+    setTimeout(saInstallTimeMachine, 250);
+    /* Correlation analysis */
+    function saPearson(a, b) { const n = Math.min(a.length, b.length); if (n < 3) return NaN; let ma = 0, mb = 0; for (let i = 0; i < n; i++) { ma += a[i]; mb += b[i] } ma /= n; mb /= n; let num = 0, da = 0, db = 0; for (let i = 0; i < n; i++) { const x = a[i] - ma, y = b[i] - mb; num += x * y; da += x * x; db += y * y } return num / Math.sqrt((da || 1) * (db || 1)) }
+    function saRenderCorrelation() { const host = $('#saCorrBody'); if (!host) return; const rows = []; const series = M.map(m => ({ m, v: (m.id === 'temp' && SA.liveTempHistory ? SA.liveTempHistory.map(x => x.v) : Svc.getHistoricalData(S.loc, m, S.ct[0], S.ct[1], 60).map(x => x.v)) })); for (let i = 0; i < series.length; i++)for (let j = i + 1; j < series.length; j++) { const r = saPearson(series[i].v, series[j].v); if (Number.isFinite(r)) rows.push({ a: series[i].m, b: series[j].m, r }) } rows.sort((a, b) => Math.abs(b.r) - Math.abs(a.r)); host.innerHTML = `<div class="sa-card"><b>LOCATION:</b> ${S.loc.name || 'GLOBAL'}<br><span class="sa-note">Temperature uses NASA POWER when available; other series are demonstration/connector series. This panel is therefore an exploratory statistical view, not a causal model.</span></div><div class="sa-corr" style="margin-top:10px">${rows.slice(0, 12).map(x => `<div><b>${x.a.n}</b><br><span class="sa-note">vs ${x.b.n}</span><br><strong>r = ${x.r.toFixed(2)}</strong></div>`).join('')}</div>` }
+    /* Scientific uncertainty display for projections. */
+    const _render = render; render = function () { _render(); try { if (S.mode === 'PROJECTION' && S.data?.[S.m]?.pr?.length) { const p = S.data[S.m].pr.at(-1); const box = document.createElement('div'); box.className = 'sa-unc'; box.id = 'saProjectionNote'; box.innerHTML = `<b>PROJECTION UNCERTAINTY:</b> ${f(lm(), p.lo)}–${f(lm(), p.hi)} ${uu(lm())}. Demonstration model range — not an official NASA forecast.`; const ins = $('#ins'); if (ins && !document.querySelector('#saProjectionNote')) ins.appendChild(box) } } catch (e) { } };
+    /* Preserve original refresh, then augment temperature with NASA data and update scientific layer. */
+    const _refresh = refresh; refresh = function () { _refresh(); if (!S.loc.g && S.loc.lat != null) saLoadNASA(S.loc.lat, S.loc.lon); else if (S.loc.g) saLoadNASA(23.8103, 90.4125); setTimeout(() => { saAugmentTemperature(); drawEnvironmentalLayer(); render() }, 50) };
+    /* Improve sonification status: expose analytic mapping without replacing the existing audio engine. */
+    const saAudioInfo = document.createElement('div'); saAudioInfo.className = 'sa-unc'; saAudioInfo.id = 'saAudioInfo'; saAudioInfo.innerHTML = '<b>SONIFICATION ANALYTICS:</b> normalized environmental value → pitch; trend → modulation/rate; selected metric → timbre. Audio is an analytical cue; numeric chart remains authoritative.'; setTimeout(() => { const host = document.querySelector('#audio') || document.querySelector('#bot'); host?.appendChild(saAudioInfo) }, 300);
+  </script>
+  <div id="saMethodsModal" class="sa-modal"><button class="sa-close" id="saMethodsClose">CLOSE</button>
+    <div class="sa-section-title">DATA & METHODS CENTER</div>
+    <h2 style="color:#fff;margin:5px 0 10px">Evidence, definitions, provenance & limitations</h2>
+    <p class="sa-note">This application distinguishes verified external observations from demonstration values. NASA
+      POWER temperature is fetched directly from NASA's public API when the selected location is available. NASA
+      GIBS/Worldview imagery is used for Earth-observation visualization. Other metrics remain explicitly labelled
+      demonstration/connector data until a verified point-sampling service is connected.</p>
+    <div id="saSources" class="sa-grid"></div>
+    <div class="sa-card" style="margin-top:10px">
+      <h3>Scientific definitions</h3>
+      <div id="saDefinitions"></div>
+    </div>
+    <div class="sa-card" style="margin-top:10px">
+      <h3>Uncertainty & limitations</h3>
+      <ul>
+        <li>Observed data and model projections are different products and are labelled separately.</li>
+        <li>Uncertainty bands in this prototype are visual analytical ranges; they are not official NASA confidence
+          intervals unless the underlying dataset supplies them.</li>
+        <li>Correlation is descriptive and does not establish causation.</li>
+        <li>Sea level must be specified as anomaly, absolute height, or rate with a reference frame; this dashboard uses
+          a demo rate until a verified altimetry point service is connected.</li>
+        <li>CO₂ should identify XCO₂ or another exact product variable; ppm alone is not sufficient provenance.</li>
+        <li>Ozone values should identify total-column product, retrieval algorithm, quality flags and units.</li>
+        <li>Soil-moisture anomaly requires a documented climatological baseline, depth and quality filtering.</li>
+        <li>CO and N₂O require documented atmospheric level/column definitions and averaging periods.</li>
+      </ul>
+    </div>
+  </div>
+  <div id="saMissionModal" class="sa-mission">
+    <div class="sa-mission-inner"><button style="float:right" id="saMissionClose">EXIT</button><span
+        class="sa-pill nasa">NASA SPACE APPS PROJECT</span>
+      <h1 style="font:600 34px Orbitron;color:#fff">MISSION MODE</h1>
+      <p class="sa-note">A five-step story for judges and users: observe → compare → analyze → listen → verify.</p>
+      <div class="sa-step">
+        <div class="sa-num">01</div>
+        <div>
+          <h2>SELECT A LOCATION</h2>
+          <p>Click the real map, search a city/coordinate, or use browser geolocation. The selected latitude and
+            longitude become the analysis target.</p>
+        </div>
+      </div>
+      <div class="sa-step">
+        <div class="sa-num">02</div>
+        <div>
+          <h2>OBSERVE EARTH SYSTEM SIGNALS</h2>
+          <p>Inspect temperature, atmospheric CO₂, sea level, ozone, soil moisture anomaly, carbon monoxide and nitrous
+            oxide with their units and definitions.</p>
+        </div>
+      </div>
+      <div class="sa-step">
+        <div class="sa-num">03</div>
+        <div>
+          <h2>TRAVEL THROUGH TIME</h2>
+          <p>Move the Earth Time Machine through the selected period. Historical observations, current values and
+            projections are visually separated.</p>
+        </div>
+      </div>
+      <div class="sa-step">
+        <div class="sa-num">04</div>
+        <div>
+          <h2>COMPARE & SONIFY</h2>
+          <p>Compare locations and use sonification as an analytical cue: pitch, rhythm and modulation encode normalized
+            value/trend. The chart remains the authoritative numeric view.</p>
+        </div>
+      </div>
+      <div class="sa-step">
+        <div class="sa-num">05</div>
+        <div>
+          <h2>VERIFY THE EVIDENCE</h2>
+          <p>Open Data & Methods to see source, mission/instrument target, metric definition, update status and
+            limitations. Never confuse demonstration values with measured NASA observations.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="saCorrModal" class="sa-modal"><button class="sa-close" id="saCorrClose">CLOSE</button>
+    <div class="sa-section-title">STATISTICAL RELATIONSHIPS</div>
+    <h2 style="color:#fff;margin:5px 0 10px">Correlation explorer</h2>
+    <p class="sa-note">Relationships below are calculated over the displayed series. They are descriptive associations
+      only and do not establish causation. When live datasets are mixed with demonstration series, the panel labels that
+      limitation.</p>
+    <div id="saCorrBody"></div>
+  </div>
+</body>
+
+</html>
