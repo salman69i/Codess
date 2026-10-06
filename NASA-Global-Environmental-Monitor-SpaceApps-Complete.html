@@ -933,6 +933,25 @@
         padding: 4vh 14px
       }
     }
+  
+/* ===== ACCESSIBLE FUTURE + BRAILLE UPGRADE ===== */
+.sa-right{display:flex;flex-direction:column;gap:14px;padding:4px 2px 18px}
+.sa-right-section{background:linear-gradient(180deg,rgba(63,208,255,.045),rgba(255,255,255,.018));border:1px solid rgba(90,200,255,.16);border-radius:14px;padding:14px}
+.sa-right-section h3{margin:0 0 10px;font:600 10px Orbitron,sans-serif;letter-spacing:.13em;color:var(--c)}
+.sa-location-name{font:500 23px 'Space Grotesk',sans-serif;color:#fff;letter-spacing:.03em}
+.sa-location-meta{font-size:11px;color:var(--m);line-height:1.55;margin-top:3px}
+.sa-primary-value{font:500 30px 'Space Grotesk',sans-serif;color:#fff;line-height:1.05}
+.sa-primary-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-end}
+.sa-trend-badge{font:600 10px Orbitron,sans-serif;padding:6px 8px;border-radius:999px;background:rgba(92,225,168,.09);border:1px solid rgba(92,225,168,.35);color:#5ce1a8;white-space:nowrap}
+.sa-trend-badge.up{color:#ffb454;border-color:#ffb45455;background:#ffb4540f}.sa-trend-badge.down{color:#5ce1a8;border-color:#5ce1a855;background:#5ce1a80f}
+.sa-kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sa-kpi{padding:10px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #ffffff0d}.sa-kpi .k{font-size:9px;color:var(--m);letter-spacing:.08em}.sa-kpi .v{font-size:17px;margin-top:3px;color:#fff}.sa-kpi .d{font-size:10px;margin-top:2px}
+.sa-indicators{display:grid;gap:7px}.sa-indicator{display:grid;grid-template-columns:1fr auto;gap:6px;padding:9px;border-radius:10px;background:rgba(255,255,255,.025);border:1px solid #ffffff0b}.sa-indicator .name{font-size:10px;color:#dbeaf6;font-weight:600}.sa-indicator .sub{font-size:9px;color:var(--m);margin-top:2px}.sa-indicator .num{text-align:right;font:500 15px 'Space Grotesk',sans-serif;color:#fff}.sa-indicator .chg{text-align:right;font-size:10px;margin-top:2px}.sa-insight{font-size:11px;line-height:1.55;color:#dbeaf6}.sa-insight strong{color:#fff}.sa-source-tag{display:inline-flex;align-items:center;gap:4px;font:600 8px Orbitron,sans-serif;letter-spacing:.06em;border:1px solid #ffffff1b;border-radius:999px;padding:3px 6px;color:var(--m);margin-top:8px}.sa-source-tag.live{color:#7dffb0;border-color:#7dffb055}.sa-source-tag.demo{color:#ffb454;border-color:#ffb45455}.sa-source-tag.proj{color:#ffb454;border-color:#ffb45455}
+.sa-future-controls{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}.sa-future-controls select{width:100%;padding:8px}.sa-future-value{font:500 25px 'Space Grotesk',sans-serif;color:#fff}.sa-future-delta{font-size:11px;margin-top:3px}.sa-range{font-size:10px;color:var(--m);margin-top:8px}.sa-progress{height:5px;background:#ffffff0c;border-radius:5px;overflow:hidden;margin-top:9px}.sa-progress i{display:block;height:100%;background:linear-gradient(90deg,#3fd0ff,#ffb454);border-radius:5px}
+.sa-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.sa-action-grid button{min-height:36px;font-size:10px}.sa-action-grid .wide{grid-column:1/-1}
+.sa-braille-modal{position:fixed;inset:3%;z-index:5200;background:rgba(3,8,15,.985);border:1px solid var(--b);border-radius:20px;box-shadow:0 30px 120px #000;display:none;overflow:auto;padding:20px}.sa-braille-modal.open{display:block}.sa-braille-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.sa-braille-board{margin-top:14px;padding:18px;border-radius:16px;border:1px solid rgba(90,200,255,.25);background:radial-gradient(circle at 30% 20%,rgba(63,208,255,.08),transparent 45%),#07101b;overflow:auto}.sa-braille-title{font:600 11px Orbitron,sans-serif;color:var(--c);letter-spacing:.13em}.sa-braille-sub{font-size:11px;color:var(--m);margin-top:4px}.sa-braille-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.sa-braille-meta>div{padding:9px;border:1px solid #ffffff10;border-radius:9px;background:#ffffff03}.sa-braille-meta b{display:block;font-size:8px;color:var(--m);letter-spacing:.08em}.sa-braille-meta span{display:block;margin-top:3px;color:#fff;font-size:12px}.sa-tactile{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px;padding:14px;border-radius:12px;background:#050a10;border:1px solid #ffffff0d;min-height:80px}.braille-cell{width:42px;height:58px;border-radius:7px;background:linear-gradient(145deg,#101b28,#050a10);border:1px solid #ffffff14;position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);padding:7px;box-shadow:inset 0 1px 0 #ffffff0a,0 5px 14px #000}.braille-dot{width:9px;height:9px;border-radius:50%;align-self:center;justify-self:center;background:#07101a;border:1px solid #ffffff18}.braille-dot.on{background:radial-gradient(circle at 35% 30%,#fff,#7edfff 38%,#27708e 100%);border-color:#bcefff;box-shadow:0 2px 4px #000,0 0 8px #3fd0ff55;transform:translateY(-1px)}.sa-braille-text{margin-top:10px;padding:10px;border-radius:10px;background:#0008;border:1px solid #ffffff0d;font-family:'Courier New',monospace;font-size:18px;line-height:1.7;letter-spacing:.04em;color:#fff;word-break:break-word}.sa-braille-note{font-size:10px;color:var(--m);line-height:1.5;margin-top:8px}.sa-downloads{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.sa-downloads button{font-size:10px}.sa-braille-mode{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.sa-braille-mode button.on{background:rgba(63,208,255,.22);border-color:var(--c)}
+.sa-projection-method{margin-top:9px}.sa-projection-method summary{font-size:10px}.sa-projection-method p{font-size:10px;color:var(--m);line-height:1.5}.sa-a11y{font-size:10px;color:var(--m);line-height:1.55}.sa-a11y strong{color:#fff}
+@media(max-width:900px){.sa-braille-meta{grid-template-columns:1fr 1fr}.sa-braille-modal{inset:1.5%}.sa-action-grid{grid-template-columns:1fr}.sa-action-grid .wide{grid-column:auto}}
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -1409,6 +1428,108 @@
       limitation.</p>
     <div id="saCorrBody"></div>
   </div>
+
+  <div id="saBrailleModal" class="sa-braille-modal" role="dialog" aria-modal="true" aria-labelledby="saBrailleTitle">
+    <div class="sa-braille-head">
+      <div><div id="saBrailleTitle" class="sa-section-title">BRAILLE ENVIRONMENT BOARD</div><h2 style="color:#fff;margin:5px 0 2px">Tactile representation of environmental change</h2><div class="sa-braille-sub">Live interface linked to the selected location, metric and future projection.</div></div>
+      <button id="saBrailleClose" aria-label="Close Braille Environment Board">CLOSE</button>
+    </div>
+    <div class="sa-braille-mode" role="tablist" aria-label="Braille information mode"><button class="on" data-bmode="summary">SUMMARY</button><button data-bmode="change">CHANGE</button><button data-bmode="future">FUTURE</button><button data-bmode="all">ALL INFORMATION</button></div>
+    <div class="sa-braille-board">
+      <div class="sa-braille-title">TACTILE BOARD PREVIEW</div>
+      <div id="saBrailleMeta" class="sa-braille-meta"></div>
+      <div id="saTactile" class="sa-tactile" aria-label="Visual tactile Braille preview"></div>
+      <div id="saBrailleText" class="sa-braille-text" aria-live="polite"></div>
+      <div class="sa-braille-note">Raised dots represent the Braille cells that can be converted into a physical prototype. The generated STL/OBJ is a prototype manufacturing geometry; verify tactile spacing and accessibility standards before fabrication.</div>
+      <div class="sa-downloads"><button id="saDlTxt">DOWNLOAD BRAILLE TEXT</button><button id="saDlSvg">DOWNLOAD TACTILE SVG</button><button id="saDlStl">DOWNLOAD 3D BOARD · STL</button><button id="saDlObj">DOWNLOAD 3D BOARD · OBJ</button></div>
+    </div>
+    <div class="sa-right-section" style="margin-top:12px"><h3>ACCESSIBILITY</h3><div class="sa-a11y"><strong>VISION</strong> — dashboard and charts · <strong>SOUND</strong> — sonification + spoken description · <strong>BRAILLE</strong> — Unicode tactile content · <strong>TOUCH</strong> — raised-dot 3D prototype.</div></div>
+  </div>
+
+
+<script>
+/* ===== FINAL NASA SPACE APPS ACCESSIBILITY + FUTURE PROJECTION PATCH ===== */
+(function(){
+  const SAU={futureYears:[2030,2040,2050,2060,2070,2080,2090,2100],brailleMode:'summary',lastProjection:null};
+  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const metric=()=>MM[S.m], loc=()=>S.loc||{g:1,name:'GLOBAL'}, unit=m=>uu(m);
+  function linearTrend(a){
+    const n=a?.length||0;if(n<3)return null;let sx=0,sy=0,sxx=0,sxy=0;
+    a.forEach((q,i)=>{const x=q.t,y=q.v;sx+=x;sy+=y;sxx+=x*x;sxy+=x*y});
+    const den=n*sxx-sx*sx;if(!den)return null;const slope=(n*sxy-sx*sy)/den,inter=(sy-slope*sx)/n;
+    const mean=sy/n;let ss=0,rs=0;a.forEach(q=>{const pred=inter+slope*q.t;rs+=(q.v-pred)**2;ss+=(q.v-mean)**2});
+    const rmse=Math.sqrt(rs/Math.max(1,n-2));const r2=ss?1-rs/ss:0;return{inter,slope,rmse,r2};
+  }
+  function projectionFromHistorical(m,d,Y){
+    const h=(d?.h||[]).filter(q=>Number.isFinite(q.t)&&Number.isFinite(q.v));if(h.length<3)return[];
+    const tr=linearTrend(h);if(!tr)return[];const last=h[h.length-1],base=last.v,years=Math.max(0,Y-last.t);let out=[];
+    const start=Math.max(1,Math.ceil((Y-last.t)*40));const steps=Math.min(120,Math.max(24,start));
+    for(let k=1;k<=steps;k++){const t=last.t+(Y-last.t)*k/steps;const v=tr.inter+tr.slope*t;const u=Math.max(tr.rmse,m.a*.01)*(1+Math.sqrt(Math.max(0,t-last.t))*.22);out.push({t,v,lo:v-u,hi:v+u})}
+    SAU.lastProjection={metric:m.id,target:Y,trend:tr,base,projected:out.at(-1)?.v??base,lo:out.at(-1)?.lo??base,hi:out.at(-1)?.hi??base,years};return out;
+  }
+  function rebuildProjections(){
+    M.forEach(m=>{const d=S.data[m.id];if(d){const p=projectionFromHistorical(m,d,S.pY);if(p.length)d.pr=p;}});
+  }
+  const oldRefresh=refresh;
+  refresh=function(){oldRefresh();setTimeout(()=>{rebuildProjections();if(typeof render==='function')render();if(typeof drawChart==='function'){S.dirty=1;drawChart();}saRenderRight();saUpdateBraille();},80)};
+
+  function currentValue(m,d){
+    if(m.id==='temp'&&window.SA?.liveTempHistory?.length){return SA.liveTempHistory.at(-1).v}
+    return d?.h?.at(-1)?.v ?? Svc.getCurrentData(loc(),m).v;
+  }
+  function pctChange(d){const h=d?.h||[];if(h.length<2)return 0;const a=h[0].v,b=h.at(-1).v;return (b-a)/Math.max(Math.abs(a),metric().a)*100}
+  function futureInfo(m,d){const p=(d?.pr||[]).at(-1);const now=currentValue(m,d);if(!p)return null;return{now,projected:p.v,lo:p.lo,hi:p.hi,delta:p.v-now,pct:(p.v-now)/Math.max(Math.abs(now),m.a)*100}}
+  function trendText(x){return x>0.05?'INCREASING':x<-0.05?'DECREASING':'STABLE'}
+  function tagFor(m){return m.id==='temp'&&SA?.liveTempHistory?'NASA POWER LIVE':'DEMO / CONNECTOR'}
+  function saRenderRight(){
+    const L=loc(),m=metric(),d=S.data[m.id];if(!d)return;const now=currentValue(m,d),ch=pctChange(d),fi=futureInfo(m,d),trend=trendText(ch);const indicators=M.map(mm=>{const dd=S.data[mm.id];const v=currentValue(mm,dd),c=pctChange(dd);return `<div class="sa-indicator"><div><div class="name">${esc(mm.ic+' '+mm.n)}</div><div class="sub">${esc(unit(mm))}</div></div><div><div class="num">${f(mm,v)} ${esc(unit(mm))}</div><div class="chg ${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</div></div></div>`}).join('');
+    const target=S.pY;const outlook=fi?`<div class="sa-future-controls"><select id="saFutureYear" aria-label="Future projection target year">${SAU.futureYears.map(y=>`<option value="${y}" ${y===target?'selected':''}>${y}</option>`).join('')}</select><button id="saViewProjection">VIEW</button></div><div style="margin-top:10px"><div class="sa-future-value">${f(m,fi.projected)} ${esc(unit(m))}</div><div class="sa-future-delta ${fi.delta>=0?'up':'dn'}">${fi.delta>=0?'▲':'▼'} ${Math.abs(fi.delta).toFixed(m.dp)} ${esc(unit(m))} from present · ${fi.pct>=0?'+':''}${fi.pct.toFixed(2)}%</div><div class="sa-range">Projection range: ${f(m,fi.lo)}–${f(m,fi.hi)} ${esc(unit(m))}</div><div class="sa-progress"><i style="width:${clamp(Math.abs(fi.pct)/20*100,5,100)}%"></i></div></div>`:`<div class="sa-note">Projection unavailable for this metric.</div>`;
+    const method=`<details class="sa-projection-method"><summary>HOW WAS THIS PROJECTED?</summary><p>Historical values were fitted with a transparent linear trend model. The future line extends that observed trend and adds an analytical range based on historical residual variability. This is a trend-based demonstration projection, not an official NASA forecast.</p></details>`;
+    $('#loc').innerHTML=`<div class="sa-right"><section class="sa-right-section"><h3>LOCATION</h3><div class="sa-location-name">${esc(L.name||'GLOBAL')}</div><div class="sa-location-meta">${L.g?'AREA-WEIGHTED GLOBAL MEAN · select a place on the map':esc((L.country||'')+(L.region?' · '+L.region:''))}<br>${esc(ll(L))}</div></section><section class="sa-right-section"><h3>CURRENT STATUS</h3><div class="sa-primary-row"><div><div class="sa-primary-value">${f(m,now)} <span style="font-size:12px;color:var(--m)">${esc(unit(m))}</span></div><div class="sa-location-meta">${esc(m.n)}</div></div><span class="sa-trend-badge ${ch>=0?'up':'down'}">${ch>=0?'↑':'↓'} ${trend}</span></div><div class="sa-kpi-grid" style="margin-top:10px"><div class="sa-kpi"><div class="k">HISTORICAL CHANGE</div><div class="v">${ch>=0?'+':''}${ch.toFixed(2)}%</div><div class="d ${ch>=0?'up':'dn'}">${ch>=0?'Increasing':'Decreasing'} over selected period</div></div><div class="sa-kpi"><div class="k">DATA STATUS</div><div class="v" style="font-size:13px">${tagFor(m)}</div><div class="d">Source labeling preserved</div></div></div></section><section class="sa-right-section"><h3>ENVIRONMENTAL INDICATORS</h3><div class="sa-indicators">${indicators}</div></section><section class="sa-right-section"><h3>ENVIRONMENTAL INSIGHT</h3><div class="sa-insight"><strong>${esc(m.n)}</strong> is <strong>${trend.toLowerCase()}</strong> across the selected historical window. Current value is <strong>${f(m,now)} ${esc(unit(m))}</strong>${fi?` and the ${target} trend-based projection is <strong>${f(m,fi.projected)} ${esc(unit(m))}</strong>.`:'.'}</div><span class="sa-source-tag ${tagFor(m).includes('NASA')?'live':'demo'}">${tagFor(m)}</span></section><section class="sa-right-section"><h3>FUTURE OUTLOOK</h3>${outlook}${method}</section><section class="sa-right-section"><h3>ACCESSIBILITY</h3><div class="sa-action-grid"><button id="saSpeak">🔊 AUDIO DESCRIPTION</button><button id="saOpenBraille">⠿ BRAILLE BOARD</button><button class="wide" id="saJumpProjection">PAST → PRESENT → FUTURE</button></div></section></div>`;
+    $('#ins').innerHTML='';
+    $('#saFutureYear')?.addEventListener('change',e=>{S.pY=+e.target.value;rebuildProjections();if(S.mode!=='PROJECTION')S.mode='PROJECTION';S.dirty=1;drawChart();saRenderRight();saUpdateBraille();});
+    $('#saViewProjection')?.addEventListener('click',()=>{S.mode='PROJECTION';S.dirty=1;drawChart();saRenderRight();});
+    $('#saJumpProjection')?.addEventListener('click',()=>{S.mode='PROJECTION';S.dirty=1;drawChart();saRenderRight();document.querySelector('#cp')?.scrollIntoView({behavior:'smooth',block:'nearest'});});
+    $('#saSpeak')?.addEventListener('click',saSpeak);
+    $('#saOpenBraille')?.addEventListener('click',()=>{saOpenBraille();});
+  }
+
+  /* ---------- Braille ---------- */
+  const B={
+    a:1,b:3,c:9,d:25,e:17,f:11,g:27,h:19,i:10,j:26,k:5,l:7,m:13,n:29,o:21,p:15,q:31,r:23,s:14,t:30,u:37,v:39,w:58,x:45,y:61,z:53,
+    ' ':0,',':2,';':10,':':18,'.':50,'!':22,'?':38,'-':36,'/':12,'+':60,'%':40,'(':14,')':25
+  };
+  const digitMap={1:'a',2:'b',3:'c',4:'d',5:'e',6:'f',7:'g',8:'h',9:'i',0:'j'};
+  function brailleEncode(text){let out='',number=false;for(const raw of String(text).toLowerCase()){if(/\d/.test(raw)){if(!number){out+='⠼';number=true}out+=String.fromCharCode(0x2800+(B[digitMap[raw]]||0));continue}number=false;let v=B[raw];if(v==null){out+=' ';continue}out+=String.fromCharCode(0x2800+v)}return out}
+  function dotsFromPattern(ch){const n=ch.codePointAt(0)-0x2800;return [0,1,2,3,4,5,6,7].map(i=>!!(n&(1<<i)))}
+  function brailleContent(){const m=metric(),d=S.data[m.id],fi=futureInfo(m,d),now=currentValue(m,d),change=pctChange(d),target=S.pY;let lines=[];if(SAU.brailleMode==='summary')lines=[loc().name||'GLOBAL',m.n,`${f(m,now)} ${unit(m)}`,trendText(change)];if(SAU.brailleMode==='change')lines=[m.n,`PAST ${f(m,d.h[0].v)} ${unit(m)}`,`NOW ${f(m,now)} ${unit(m)}`,`CHANGE ${change>=0?'+':''}${change.toFixed(2)}%`];if(SAU.brailleMode==='future')lines=[m.n,`NOW ${f(m,now)} ${unit(m)}`,`${target} ${fi?f(m,fi.projected):'N/A'} ${unit(m)}`,fi?`RANGE ${f(m,fi.lo)}-${f(m,fi.hi)}`:'PROJECTION UNAVAILABLE'];if(SAU.brailleMode==='all')lines=[loc().name||'GLOBAL',m.n,`NOW ${f(m,now)} ${unit(m)}`,`CHANGE ${change>=0?'+':''}${change.toFixed(2)}%`,`TREND ${trendText(change)}`,`${target} ${fi?f(m,fi.projected):'N/A'} ${unit(m)}`];return lines}
+  function tactileHTML(br){return [...br].map(ch=>{const dots=dotsFromPattern(ch);return `<div class="braille-cell" title="${esc(ch)}">${dots.map(x=>`<span class="braille-dot ${x?'on':''}"></span>`).join('')}</div>`}).join('')}
+  function saUpdateBraille(){const modal=$('#saBrailleModal');if(!modal)return;const m=metric(),d=S.data[m.id],fi=futureInfo(m,d),now=currentValue(m,d),change=pctChange(d),lines=brailleContent(),plain=lines.join(' · '),br=brailleEncode(plain);$('#saBrailleMeta').innerHTML=`<div><b>LOCATION</b><span>${esc(loc().name||'GLOBAL')}</span></div><div><b>METRIC</b><span>${esc(m.n)}</span></div><div><b>CURRENT</b><span>${f(m,now)} ${esc(unit(m))}</span></div><div><b>FUTURE ${S.pY}</b><span>${fi?f(m,fi.projected)+' '+unit(m):'N/A'}</span></div>`;$('#saTactile').innerHTML=tactileHTML(br);$('#saBrailleText').textContent=br;modal.dataset.brillePlain=plain;modal.dataset.braille=br}
+  function saOpenBraille(){const modal=$('#saBrailleModal');modal.classList.add('open');saUpdateBraille();$('#saBrailleClose')?.focus()}
+  function saSpeak(){const m=metric(),d=S.data[m.id],fi=futureInfo(m,d),now=currentValue(m,d),change=pctChange(d);const text=`${m.n}. Current value ${f(m,now)} ${unit(m)}. Historical change ${change>=0?'plus':'minus'} ${Math.abs(change).toFixed(2)} percent. Trend ${trendText(change).toLowerCase()}.${fi?` Projected value for ${S.pY} is ${f(m,fi.projected)} ${unit(m)}, with a range from ${f(m,fi.lo)} to ${f(m,fi.hi)}.`:''}`;if(!('speechSynthesis'in window)){toast('Spoken audio is not supported by this browser.');return}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.92;u.pitch=1; speechSynthesis.speak(u);toast('Audio description is speaking the selected environmental state.');}
+  $('#saBrailleClose')?.addEventListener('click',()=>$('#saBrailleModal').classList.remove('open'));
+  $$('[data-bmode]').forEach(b=>b.addEventListener('click',()=>{$$('[data-bmode]').forEach(x=>x.classList.remove('on'));b.classList.add('on');SAU.brailleMode=b.dataset.bmode;saUpdateBraille()}));
+  function dl(name,blob){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+  function safeName(){return `NASA_Braille_${metric().id}_${(loc().name||'GLOBAL').replace(/[^a-z0-9]+/gi,'_')}_${S.pY}`}
+  $('#saDlTxt')?.addEventListener('click',()=>{saUpdateBraille();dl(safeName()+'.txt',new Blob([$('#saBrailleText').textContent+'\n\n'+$('#saBrailleModal').dataset.brillePlain],{type:'text/plain;charset=utf-8'}))});
+  function svgBoard(){const br=$('#saBrailleModal').dataset.braille||'';const cellW=42,cellH=58,gap=8,pad=18,cols=Math.max(1,Math.floor(900/(cellW+gap))),rows=Math.ceil([...br].length/cols),w=pad*2+cols*(cellW+gap)-gap,h=pad*2+rows*(cellH+gap)-gap;let cells='';[...br].forEach((ch,i)=>{const col=i%cols,row=Math.floor(i/cols),x=pad+col*(cellW+gap),y=pad+row*(cellH+gap),dots=dotsFromPattern(ch);cells+=`<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" rx="7" fill="#0b1420" stroke="#4a7890"/>`;dots.forEach((on,j)=>{const dx=x+13+(j%2)*16,dy=y+11+Math.floor(j/2)*12;cells+=`<circle cx="${dx}" cy="${dy}" r="4.5" fill="${on?'#bcefff':'#07101a'}" stroke="${on?'#7edfff':'#30414d'}"/>`})});return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect width="100%" height="100%" fill="#050a10"/>${cells}</svg>`}
+  $('#saDlSvg')?.addEventListener('click',()=>{saUpdateBraille();dl(safeName()+'.svg',new Blob([svgBoard()],{type:'image/svg+xml'}))});
+  function tri(a,b,c){return `facet normal 0 0 0\n outer loop\n  vertex ${a[0]} ${a[1]} ${a[2]}\n  vertex ${b[0]} ${b[1]} ${b[2]}\n  vertex ${c[0]} ${c[1]} ${c[2]}\n endloop\nendfacet\n`}
+  function boxSTL(x,y,z,w,h,d){const X=x+w,Y=y+h,Z=z+d;const v=[[x,y,z],[X,y,z],[X,Y,z],[x,Y,z],[x,y,Z],[X,y,Z],[X,Y,Z],[x,Y,Z]];return tri(v[0],v[1],v[2])+tri(v[0],v[2],v[3])+tri(v[4],v[6],v[5])+tri(v[4],v[7],v[6])+tri(v[0],v[4],v[5])+tri(v[0],v[5],v[1])+tri(v[1],v[5],v[6])+tri(v[1],v[6],v[2])+tri(v[2],v[6],v[7])+tri(v[2],v[7],v[3])+tri(v[3],v[7],v[4])+tri(v[3],v[4],v[0])}
+  function cylSTL(cx,cy,z,r,h,seg=20){let out='';for(let i=0;i<seg;i++){const a=2*Math.PI*i/seg,b=2*Math.PI*(i+1)/seg,p1=[cx+r*Math.cos(a),cy+r*Math.sin(a),z],p2=[cx+r*Math.cos(b),cy+r*Math.sin(b),z],q1=[p1[0],p1[1],z+h],q2=[p2[0],p2[1],z+h];out+=tri(p1,p2,q2)+tri(p1,q2,q1)+tri([cx,cy,z],p2,p1)+tri([cx,cy,z+h],q1,q2)}return out}
+  function stlBoard(){const br=$('#saBrailleModal').dataset.braille||'';const cellW=12,cellH=17,gap=3,pad=4,cols=Math.max(1,Math.min(18,Math.floor(170/(cellW+gap)))),rows=Math.ceil([...br].length/cols),baseT=2,dotH=1.5,dotR=.9,w=pad*2+cols*(cellW+gap)-gap,h=pad*2+rows*(cellH+gap)-gap;let out='solid nasa_braille_board\n';out+=boxSTL(0,0,0,w,h,baseT);[...br].forEach((ch,i)=>{const col=i%cols,row=Math.floor(i/cols),x=pad+col*(cellW+gap),y=pad+row*(cellH+gap),dots=dotsFromPattern(ch);dots.forEach((on,j)=>{if(!on)return;const dx=x+4+(j%2)*4,dy=y+3+Math.floor(j/2)*3.2;out+=cylSTL(dx,dy,baseT,dotR,dotH,20)})});return out+'endsolid nasa_braille_board\n'}
+  $('#saDlStl')?.addEventListener('click',()=>{saUpdateBraille();dl(safeName()+'.stl',new Blob([stlBoard()],{type:'model/stl'}))});
+  function objBoard(){const br=$('#saBrailleModal').dataset.braille||'';const cellW=12,cellH=17,gap=3,pad=4,cols=Math.max(1,Math.min(18,Math.floor(170/(cellW+gap)))),rows=Math.ceil([...br].length/cols),baseT=2,dotH=1.5,dotR=.9,w=pad*2+cols*(cellW+gap)-gap,h=pad*2+rows*(cellH+gap)-gap;let vs=[],fs=[],addBox=(x,y,z,W,H,D)=>{const b=vs.length/3;[[x,y,z],[x+W,y,z],[x+W,y+H,z],[x,y+H,z],[x,y,z+D],[x+W,y,z+D],[x+W,y+H,z+D],[x,y+H,z+D]].forEach(v=>vs.push(...v));[[1,2,3],[1,3,4],[5,7,6],[5,8,7],[1,5,6],[1,6,2],[2,6,7],[2,7,3],[3,7,8],[3,8,4],[4,8,5],[4,5,1]].forEach(f=>fs.push(f.map(i=>b+i).join(' ')))};addBox(0,0,0,w,h,baseT);[...br].forEach((ch,i)=>{const col=i%cols,row=Math.floor(i/cols),x=pad+col*(cellW+gap),y=pad+row*(cellH+gap),dots=dotsFromPattern(ch);dots.forEach((on,j)=>{if(on){const cx=x+4+(j%2)*4,cy=y+3+Math.floor(j/2)*3.2;const n=12,base=vs.length/3;for(let k=0;k<n;k++){const a=2*Math.PI*k/n;vs.push(cx+dotR*Math.cos(a),cy+dotR*Math.sin(a),baseT,cx+dotR*Math.cos(a),cy+dotR*Math.sin(a),baseT+dotH)}for(let k=0;k<n;k++){const a=base+k,b=base+(k+1)%n,c=base+n+(k+1)%n,d=base+n+k;fs.push(`${a+1} ${b+1} ${c+1}`,`${a+1} ${c+1} ${d+1}`)}}})});return '# NASA Braille prototype\n# units: mm\n'+vs.reduce((a,v,i)=>i%3===0?a+'v '+v+' '+vs[i+1]+' '+vs[i+2]+'\n':a,'')+fs.map(f=>'f '+f).join('\n')+'\n'}
+  $('#saDlObj')?.addEventListener('click',()=>{saUpdateBraille();dl(safeName()+'.obj',new Blob([objBoard()],{type:'text/plain'}))});
+
+  /* Re-render after existing app state changes without replacing its working features. */
+  const oldRender=render;render=function(){oldRender();try{rebuildProjections();saRenderRight();saUpdateBraille()}catch(e){console.warn('accessibility render patch',e)}};
+  setTimeout(()=>{try{rebuildProjections();saRenderRight();saUpdateBraille()}catch(e){console.warn(e)}},120);
+  window.addEventListener('keydown',e=>{if(e.key==='Escape')$('#saBrailleModal')?.classList.remove('open')});
+  window.SA_ACCESSIBILITY={brailleEncode,projectionFromHistorical,saSpeak,openBraille:saOpenBraille};
+})();
+</script>
+
 </body>
 
 </html>
