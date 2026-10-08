@@ -42,7 +42,6 @@ int main()
     int num;
     printf("Enter a positive integer: ");
     scanf("%d", &num);
-    // Check if the number is divisible by 3 or 7
     if (num % 3 == 0 || num % 7 == 0)
     {
         printf("true\n");
