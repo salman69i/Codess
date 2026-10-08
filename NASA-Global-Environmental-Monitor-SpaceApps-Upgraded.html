@@ -11,6 +11,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@600&family=Space+Grotesk:wght@500&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <style>
     :root {
       color-scheme: dark;
@@ -952,6 +953,49 @@
 .sa-projection-method{margin-top:9px}.sa-projection-method summary{font-size:10px}.sa-projection-method p{font-size:10px;color:var(--m);line-height:1.5}.sa-a11y{font-size:10px;color:var(--m);line-height:1.55}.sa-a11y strong{color:#fff}
 @media(max-width:900px){.sa-braille-meta{grid-template-columns:1fr 1fr}.sa-braille-modal{inset:1.5%}.sa-action-grid{grid-template-columns:1fr}.sa-action-grid .wide{grid-column:auto}}
 
+
+    /* ===== TREND / TIME-RANGE LAYOUT FIX ===== */
+    #bot{display:grid;grid-template-columns:minmax(340px,1fr) 310px 250px;grid-template-rows:minmax(0,1fr) auto;gap:10px}
+    #bot>#cp{grid-column:1;grid-row:1/3;min-width:0;min-height:0;overflow:hidden}
+    #bot>#ap{grid-column:2;grid-row:1/3;width:auto;min-width:0}
+    #bot>#saTimeMachine{grid-column:3;grid-row:1;min-width:0;min-height:0;overflow:auto}
+    #bot>#saAudioInfo{grid-column:3;grid-row:2;min-width:0;max-height:120px;overflow:auto;margin:0}
+    #cp>.r{flex:none;flex-wrap:wrap;row-gap:4px}
+    #cp>.r .lbl{flex:none}
+    #modes{flex-wrap:wrap;justify-content:flex-end;margin:0}
+    #rng,#ext{flex:none;align-items:center;gap:4px;margin:4px 0;line-height:1.2}
+    #rng button,#ext button,#modes button{padding:3px 7px;min-height:22px;font-size:11px;line-height:1.2;white-space:nowrap}
+    #ext:empty{display:none}
+    #cp>.sm{flex:none}
+    #cp #chart{flex:1 1 90px;min-height:90px}
+    @media(max-width:900px){
+      #bot{display:flex;flex-direction:column}
+      #bot>#cp,#bot>#ap,#bot>#saTimeMachine,#bot>#saAudioInfo{grid-column:auto;grid-row:auto;max-height:none}
+      #bot>#cp{height:auto;min-height:360px}
+    }
+    /* ===== CLICKABLE INDICATORS ===== */
+    .sa-indicator{cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+    .sa-indicator:hover{border-color:rgba(90,200,255,.45);background:rgba(63,208,255,.05);box-shadow:0 0 12px rgba(63,208,255,.12)}
+    .sa-indicator:focus-visible{outline:2px solid var(--c);outline-offset:1px}
+    .sa-indicator.sel{border-color:rgba(90,200,255,.55)}
+    /* ===== INDICATOR MODAL ===== */
+    #saIndicatorModal{position:fixed;inset:0;background:#000b;backdrop-filter:blur(3px);z-index:5300;display:none;align-items:center;justify-content:center;padding:14px}
+    #saIndicatorModal.open{display:flex}
+    #saIndicatorModal .sim-box{width:min(520px,100%);max-height:92vh;overflow:auto;background:#07101b;border:1px solid var(--c);border-radius:20px;box-shadow:0 0 40px rgba(63,208,255,.18),0 30px 90px #000;padding:20px}
+    .sim-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .sim-title{font:600 13px Orbitron,sans-serif;letter-spacing:.12em;color:var(--c);margin:0}
+    .sim-x{width:34px;height:34px;padding:0;border-radius:10px;font-size:16px;flex:none}
+    .sim-val{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .sim-num{font:500 34px 'Space Grotesk',sans-serif;color:#fff;line-height:1.05}
+    .sim-num small{font-size:13px;color:var(--m)}
+    .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .sim-box h4,.sim-sec h4{margin:0 0 6px;font:600 9px Orbitron,sans-serif;letter-spacing:.12em;color:var(--c)}
+    .sim-sec{margin-top:14px}
+    .sim-sec p{margin:0;font-size:11px;line-height:1.55;color:#dbeaf6}
+    #simChart{width:100%;height:150px;display:block;background:rgba(0,0,0,.3);border-radius:10px}
+    .sim-legend{display:flex;justify-content:space-between;font-size:9px;color:var(--m);margin-top:4px;letter-spacing:.06em}
+    .sim-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}.sim-actions button{flex:1 1 140px;min-height:36px;font-size:10px}
+    @media(max-width:600px){.sim-grid{grid-template-columns:1fr}#saIndicatorModal .sim-box{padding:14px}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -1039,6 +1083,7 @@
     <div class="lbl" style="margin:12px 0 4px">SETTINGS</div>
     <div id="ss"></div>
   </aside>
+  <div id="saIndicatorModal" aria-hidden="true"><div class="sim-box" role="dialog" aria-modal="true" aria-labelledby="simTitle" id="simBox"></div></div>
   <div class="modal" id="auth">
     <form id="af" novalidate>
       <div class="r"><span class="lbl">DEMO AUTHENTICATION</span><button type="button" id="ax"
@@ -1056,6 +1101,16 @@
   <div id="tip"></div>
   <div id="toast" role="status"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>window.L&&window.L.map||document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>')</script>
+  <script>window.L&&window.L.map||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"><\/script>')</script>
+  <script>
+    /* Last-resort fallback: if no CDN could deliver Leaflet (offline, sandboxed preview, CSP), keep the dashboard running with an inert map shim and a visible notice. */
+    if(!(window.L&&window.L.map)){
+      const mk=()=>new Proxy(function(){},{get:(t,k)=>k==='then'?undefined:k===Symbol.toPrimitive?()=>0:mk(),apply:()=>mk(),construct:()=>mk()});
+      window.L=mk();window.__noLeaflet=true;
+      document.addEventListener('DOMContentLoaded',()=>{const m=document.getElementById('map');if(m){m.style.cssText+=';display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:#9fb6c9;font-size:13px;line-height:1.6';m.innerHTML='Interactive map unavailable: the Leaflet library could not be loaded (offline or blocked network).<br>Open this file directly in a browser with internet access. All dashboard data, charts, audio and indicators still work.'}});
+    }
+  </script>
   <script>
     const $ = s => document.querySelector(s), clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), D = Math.PI / 180, END = 2026.75, MS = 864e5 * 365;
     const hsh = x => { x = Math.sin(x * 127.1) * 43758.5453; return x - Math.floor(x) };
@@ -1481,8 +1536,9 @@
   function futureInfo(m,d){const p=(d?.pr||[]).at(-1);const now=currentValue(m,d);if(!p)return null;return{now,projected:p.v,lo:p.lo,hi:p.hi,delta:p.v-now,pct:(p.v-now)/Math.max(Math.abs(now),m.a)*100}}
   function trendText(x){return x>0.05?'INCREASING':x<-0.05?'DECREASING':'STABLE'}
   function tagFor(m){return m.id==='temp'&&SA?.liveTempHistory?'NASA POWER LIVE':'DEMO / CONNECTOR'}
+  var selectedIndicatorId=null;
   function saRenderRight(){
-    const L=loc(),m=metric(),d=S.data[m.id];if(!d)return;const now=currentValue(m,d),ch=pctChange(d),fi=futureInfo(m,d),trend=trendText(ch);const indicators=M.map(mm=>{const dd=S.data[mm.id];const v=currentValue(mm,dd),c=pctChange(dd);return `<div class="sa-indicator"><div><div class="name">${esc(mm.ic+' '+mm.n)}</div><div class="sub">${esc(unit(mm))}</div></div><div><div class="num">${f(mm,v)} ${esc(unit(mm))}</div><div class="chg ${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</div></div></div>`}).join('');
+    const L=loc(),m=metric(),d=S.data[m.id];if(!d)return;const now=currentValue(m,d),ch=pctChange(d),fi=futureInfo(m,d),trend=trendText(ch);const indicators=M.map(mm=>{const dd=S.data[mm.id];const v=currentValue(mm,dd),c=pctChange(dd);return `<div class="sa-indicator${selectedIndicatorId===mm.id?' sel':''}" data-indicator="${mm.id}" tabindex="0" role="button" aria-haspopup="dialog" aria-label="${esc(mm.n)}: ${f(mm,v)} ${esc(unit(mm))}. Open indicator details"><div><div class="name">${esc(mm.ic+' '+mm.n)}</div><div class="sub">${esc(unit(mm))}</div></div><div><div class="num">${f(mm,v)} ${esc(unit(mm))}</div><div class="chg ${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</div></div></div>`}).join('');
     const target=S.pY;const outlook=fi?`<div class="sa-future-controls"><select id="saFutureYear" aria-label="Future projection target year">${SAU.futureYears.map(y=>`<option value="${y}" ${y===target?'selected':''}>${y}</option>`).join('')}</select><button id="saViewProjection">VIEW</button></div><div style="margin-top:10px"><div class="sa-future-value">${f(m,fi.projected)} ${esc(unit(m))}</div><div class="sa-future-delta ${fi.delta>=0?'up':'dn'}">${fi.delta>=0?'▲':'▼'} ${Math.abs(fi.delta).toFixed(m.dp)} ${esc(unit(m))} from present · ${fi.pct>=0?'+':''}${fi.pct.toFixed(2)}%</div><div class="sa-range">Projection range: ${f(m,fi.lo)}–${f(m,fi.hi)} ${esc(unit(m))}</div><div class="sa-progress"><i style="width:${clamp(Math.abs(fi.pct)/20*100,5,100)}%"></i></div></div>`:`<div class="sa-note">Projection unavailable for this metric.</div>`;
     const method=`<details class="sa-projection-method"><summary>HOW WAS THIS PROJECTED?</summary><p>Historical values were fitted with a transparent linear trend model. The future line extends that observed trend and adds an analytical range based on historical residual variability. This is a trend-based demonstration projection, not an official NASA forecast.</p></details>`;
     $('#loc').innerHTML=`<div class="sa-right"><section class="sa-right-section"><h3>LOCATION</h3><div class="sa-location-name">${esc(L.name||'GLOBAL')}</div><div class="sa-location-meta">${L.g?'AREA-WEIGHTED GLOBAL MEAN · select a place on the map':esc((L.country||'')+(L.region?' · '+L.region:''))}<br>${esc(ll(L))}</div></section><section class="sa-right-section"><h3>CURRENT STATUS</h3><div class="sa-primary-row"><div><div class="sa-primary-value">${f(m,now)} <span style="font-size:12px;color:var(--m)">${esc(unit(m))}</span></div><div class="sa-location-meta">${esc(m.n)}</div></div><span class="sa-trend-badge ${ch>=0?'up':'down'}">${ch>=0?'↑':'↓'} ${trend}</span></div><div class="sa-kpi-grid" style="margin-top:10px"><div class="sa-kpi"><div class="k">HISTORICAL CHANGE</div><div class="v">${ch>=0?'+':''}${ch.toFixed(2)}%</div><div class="d ${ch>=0?'up':'dn'}">${ch>=0?'Increasing':'Decreasing'} over selected period</div></div><div class="sa-kpi"><div class="k">DATA STATUS</div><div class="v" style="font-size:13px">${tagFor(m)}</div><div class="d">Source labeling preserved</div></div></div></section><section class="sa-right-section"><h3>ENVIRONMENTAL INDICATORS</h3><div class="sa-indicators">${indicators}</div></section><section class="sa-right-section"><h3>ENVIRONMENTAL INSIGHT</h3><div class="sa-insight"><strong>${esc(m.n)}</strong> is <strong>${trend.toLowerCase()}</strong> across the selected historical window. Current value is <strong>${f(m,now)} ${esc(unit(m))}</strong>${fi?` and the ${target} trend-based projection is <strong>${f(m,fi.projected)} ${esc(unit(m))}</strong>.`:'.'}</div><span class="sa-source-tag ${tagFor(m).includes('NASA')?'live':'demo'}">${tagFor(m)}</span></section><section class="sa-right-section"><h3>FUTURE OUTLOOK</h3>${outlook}${method}</section><section class="sa-right-section"><h3>ACCESSIBILITY</h3><div class="sa-action-grid"><button id="saSpeak">🔊 AUDIO DESCRIPTION</button><button id="saOpenBraille">⠿ BRAILLE BOARD</button><button class="wide" id="saJumpProjection">PAST → PRESENT → FUTURE</button></div></section></div>`;
@@ -1526,6 +1582,58 @@
   const oldRender=render;render=function(){oldRender();try{rebuildProjections();saRenderRight();saUpdateBraille()}catch(e){console.warn('accessibility render patch',e)}};
   setTimeout(()=>{try{rebuildProjections();saRenderRight();saUpdateBraille()}catch(e){console.warn(e)}},120);
   window.addEventListener('keydown',e=>{if(e.key==='Escape')$('#saBrailleModal')?.classList.remove('open')});
+  /* ===== ENVIRONMENTAL INDICATOR POPUP (reusable, driven by M + S.data) ===== */
+  let lastIndicatorTrigger=null;
+  const SIM_DESC={temp:'Temperature conditions and their change over the selected period. For global view this is an area-weighted mean.',co2:'Atmospheric carbon dioxide concentration and its temporal trend.',sea:'Sea-level change expressed as a rate, as defined by the selected dataset.',o3:'Total-column ozone, a measure of the stratospheric ozone shield.',soil:'Deviation of soil moisture from the selected baseline (percent anomaly).',co:'Atmospheric carbon monoxide conditions, a tracer of combustion and pollution.',n2o:'Atmospheric nitrous oxide concentration, a long-lived greenhouse gas.'};
+  function simDrawChart(m,d){
+    const cv=$('#simChart');if(!cv||!d)return;const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;cv.width=Math.max(10,r.width*dpr);cv.height=Math.max(10,r.height*dpr);
+    const g=cv.getContext('2d');g.scale(dpr,dpr);const W=r.width,H=r.height,P=8;g.clearRect(0,0,W,H);
+    const h=d.h||[],pr=d.pr||[],all=h.concat(pr);if(all.length<2)return;
+    let t0=h[0].t,t1=all.at(-1).t,mn=Infinity,mx=-Infinity;all.forEach(q=>{mn=Math.min(mn,q.v,q.lo??q.v);mx=Math.max(mx,q.v,q.hi??q.v)});if(mx===mn){mx+=1;mn-=1}
+    const X=t=>P+(t-t0)/((t1-t0)||1)*(W-2*P),Y=v=>H-P-(v-mn)/(mx-mn)*(H-2*P);
+    if(pr.length){g.beginPath();pr.forEach((q,i)=>{i?g.lineTo(X(q.t),Y(q.hi)):g.moveTo(X(q.t),Y(q.hi))});for(let i=pr.length-1;i>=0;i--)g.lineTo(X(pr[i].t),Y(pr[i].lo));g.closePath();g.fillStyle='rgba(255,180,84,.14)';g.fill()}
+    g.lineWidth=2;g.strokeStyle='#3fd0ff';g.beginPath();h.forEach((q,i)=>{i?g.lineTo(X(q.t),Y(q.v)):g.moveTo(X(q.t),Y(q.v))});g.stroke();
+    if(pr.length){g.strokeStyle='#ffb454';g.setLineDash([5,4]);g.beginPath();g.moveTo(X(h.at(-1).t),Y(h.at(-1).v));pr.forEach(q=>g.lineTo(X(q.t),Y(q.v)));g.stroke();g.setLineDash([])}
+    const nx=X(h.at(-1).t);g.fillStyle='#fff';g.beginPath();g.arc(nx,Y(h.at(-1).v),3.5,0,7);g.fill();
+  }
+  function renderIndicatorModal(){
+    const m=MM[selectedIndicatorId],box=$('#simBox');if(!m||!box)return;const d=S.data[m.id];if(!d||!d.h?.length){box.innerHTML='<p>Data not available.</p>';return}
+    const v=currentValue(m,d),ch=pctChange(d),tr=trendText(ch),fi=futureInfo(m,d),tag=tagFor(m),live=tag.includes('NASA');
+    box.innerHTML=`<div class="sim-head"><h3 class="sim-title" id="simTitle">${esc(m.ic+' '+m.n)}</h3><button class="sim-x" id="simClose" aria-label="Close indicator details">✕</button></div>
+    <div class="sim-val"><div><div class="k sm">CURRENT VALUE · ${esc(L_name())}</div><div class="sim-num">${f(m,v)} <small>${esc(unit(m))}</small></div></div><span class="sa-trend-badge ${ch>=0?'up':'down'}">${ch>=0?'↑':'↓'} ${tr}</span></div>
+    <div class="sim-grid"><div class="sa-kpi"><div class="k">HISTORICAL CHANGE</div><div class="v">${ch>=0?'+':''}${ch.toFixed(2)}%</div><div class="d ${ch>=0?'up':'dn'}">${tr==='STABLE'?'Stable':ch>=0?'Increasing':'Decreasing'} over selected period</div></div><div class="sa-kpi"><div class="k">DATA STATUS</div><div class="v" style="font-size:13px">${esc(tag)}</div><div class="d">${live?'NASA POWER observations':'Demonstration / connector data'}</div></div></div>
+    <div class="sim-sec"><h4>TREND CHART · PAST → PRESENT${fi?' → FUTURE':''}</h4><canvas id="simChart" aria-label="${esc(m.n)} trend chart"></canvas><div class="sim-legend"><span>${esc(tstr(d.h[0].t,20))}</span><span>NOW ${esc(f(m,v))}</span><span>${fi?esc(String(S.pY)):''}</span></div></div>
+    ${fi?`<div class="sim-sec"><h4>FUTURE PROJECTION</h4><p>Projected value for ${S.pY}: <strong>${f(m,fi.projected)} ${esc(unit(m))}</strong> (${fi.pct>=0?'+':''}${fi.pct.toFixed(2)}%; range ${f(m,fi.lo)}–${f(m,fi.hi)}). Trend-based demonstration projection, not an official NASA forecast.</p></div>`:''}
+    <div class="sim-sec"><h4>SCIENTIFIC DESCRIPTION</h4><p>${esc(SIM_DESC[m.id]||'')}</p></div>
+    <div class="sim-actions"><button id="simAn">VIEW ANALYTICS</button>${fi?'<button id="simPr">VIEW PROJECTION</button>':''}</div>`;
+    $('#simClose').onclick=closeIndicatorModal;
+    $('#simAn').onclick=()=>{const id=m.id;closeIndicatorModal(true);S.m=id;refresh();setTimeout(()=>document.querySelector('#cp')?.scrollIntoView({behavior:'smooth',block:'nearest'}),100)};
+    $('#simPr')?.addEventListener('click',()=>{const id=m.id;closeIndicatorModal(true);S.m=id;S.mode='PROJECTION';S.p=.5;refresh()});
+    requestAnimationFrame(()=>simDrawChart(m,d));
+  }
+  function L_name(){return esc(loc().name||'GLOBAL')}
+  function openIndicatorModal(id,trigger){
+    if(!MM[id])return;selectedIndicatorId=id;lastIndicatorTrigger=trigger||null;renderIndicatorModal();
+    const el=$('#saIndicatorModal');el.classList.add('open');el.setAttribute('aria-hidden','false');$('#simClose')?.focus();
+    document.querySelectorAll('.sa-indicator').forEach(x=>x.classList.toggle('sel',x.dataset.indicator===id));
+  }
+  function closeIndicatorModal(skipFocus){
+    const id=selectedIndicatorId,el=$('#saIndicatorModal');el.classList.remove('open');el.setAttribute('aria-hidden','true');selectedIndicatorId=null;
+    document.querySelectorAll('.sa-indicator.sel').forEach(x=>x.classList.remove('sel'));
+    if(skipFocus!==true&&id)setTimeout(()=>document.querySelector(`.sa-indicator[data-indicator="${id}"]`)?.focus(),0);
+  }
+  document.addEventListener('click',e=>{
+    const el=$('#saIndicatorModal');
+    if(e.target===el){closeIndicatorModal();return}
+    const t=e.target.closest('[data-indicator]');if(t)openIndicatorModal(t.dataset.indicator,t);
+  });
+  document.addEventListener('keydown',e=>{
+    const t=e.target.closest?.('[data-indicator]');
+    if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();openIndicatorModal(t.dataset.indicator,t)}
+  },true);
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#saIndicatorModal').classList.contains('open')){e.stopImmediatePropagation();e.preventDefault();closeIndicatorModal()}},true);
+  window.addEventListener('resize',()=>{if(selectedIndicatorId){const m=MM[selectedIndicatorId];simDrawChart(m,S.data[m.id])}});
+
   window.SA_ACCESSIBILITY={brailleEncode,projectionFromHistorical,saSpeak,openBraille:saOpenBraille};
 })();
 </script>

@@ -2,17 +2,15 @@
 
 int main()
 {
-    int n;
+    int n,arr[100];;
     printf("Enter the number of elements in the array: ");
     scanf("%d", &n);
-    int arr[n];
     for (int i = 0; i < n; i++)
     {
         scanf("%d", &arr[i]);
     }
     int max = arr[0];
     int min = arr[0];
-
     for (int i = 1; i < n; i++)
     {
         if (arr[i] > max)
@@ -26,6 +24,5 @@ int main()
     }
     printf("Maximum = %d\n", max);
     printf("Minimum = %d\n", min);
-
     return 0;
 }
