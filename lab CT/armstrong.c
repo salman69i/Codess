@@ -1,38 +1,40 @@
-// #include <stdio.h>
-// int main()
-// {
-//     int number, sum = 0, temp, rem;
-//     printf("enter any number: ");
-//     scanf("%d", &number);
-//     temp = number;
-//     while (temp != 0)
-//     {
-//         rem = temp % 10;
-//         sum = sum + rem * rem * rem;
-//         temp = temp / 10;
-//     }
-//     if (number == sum)
-//         printf("armstrong numbmer");
-//     else
-//         printf("not a armstrong number");
-//     return 0;
-// }
 #include <stdio.h>
+
 int main()
 {
-    int number, sum = 0, temp, rem;
-    printf("enter any number: ");
+    int number, temp, digit, digits = 0;
+    long long sum = 0, power;
+
+    printf("Enter a non-negative number: ");
     scanf("%d", &number);
+
     temp = number;
-    while (temp != 0)
+    while (temp > 0)
     {
-        rem = temp % 10;
-        sum = sum + rem * rem * rem;
+        digits++;
         temp = temp / 10;
     }
+
+    if (digits == 0)
+        digits = 1;
+
+    temp = number;
+    while (temp > 0)
+    {
+        digit = temp % 10;
+        power = 1;
+
+        for (int i = 0; i < digits; i++)
+            power = power * digit;
+
+        sum = sum + power;
+        temp = temp / 10;
+    }
+
     if (sum == number)
-        printf("armstrong number");
+        printf("Armstrong number\n");
     else
-        printf("not a armstrong number");
+        printf("Not an Armstrong number\n");
+
     return 0;
 }
