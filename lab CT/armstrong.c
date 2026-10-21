@@ -1,40 +1,29 @@
 #include <stdio.h>
-
+#include <math.h>
 int main()
 {
-    int number, temp, digit, digits = 0;
-    long long sum = 0, power;
-
-    printf("Enter a non-negative number: ");
-    scanf("%d", &number);
-
-    temp = number;
-    while (temp > 0)
+    int n, cnt = 0, orginal, remainder, sum = 0;
+    printf("enter any number: ");
+    scanf("%d", &n);
+    orginal = n;
+    int org = n;
+    while (n != 0)
     {
-        digits++;
-        temp = temp / 10;
+        n = n / 10;
+        cnt++;
     }
-
-    if (digits == 0)
-        digits = 1;
-
-    temp = number;
-    while (temp > 0)
+    while (orginal != 0)
     {
-        digit = temp % 10;
-        power = 1;
-
-        for (int i = 0; i < digits; i++)
-            power = power * digit;
-
-        sum = sum + power;
-        temp = temp / 10;
+        remainder = orginal % 10; // 153
+        sum = sum + pow(remainder, cnt);
+        orginal = orginal / 10;
     }
-
-    if (sum == number)
-        printf("Armstrong number\n");
+    if (sum == org)
+    {
+        printf("yes");
+    }
     else
-        printf("Not an Armstrong number\n");
-
-    return 0;
+    {
+        printf("no");
+    }
 }
